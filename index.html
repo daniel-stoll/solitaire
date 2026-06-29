@@ -1,0 +1,2612 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Solitaire</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --felt: #0f7d3f;
+      --felt-dark: #075c2d;
+      --felt-light: #1b9b55;
+      --xp-blue: #1f5fbf;
+      --xp-blue-dark: #17478d;
+      --chrome: #d7d3c8;
+      --chrome-hi: #f7f5ee;
+      --chrome-shadow: #827e73;
+      --ink: #171717;
+      --muted: #4b4b4b;
+      --card-w: clamp(44px, 11.4vw, 92px);
+      --card-h: calc(var(--card-w) * 1.4);
+      --gap: clamp(6px, 1.4vw, 12px);
+      --fan: clamp(17px, 4.2vw, 31px);
+      --radius: 7px;
+      --board-pad: clamp(8px, 2.4vw, 18px);
+      --board-w: calc(var(--card-w) * 7 + var(--gap) * 6);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      font-family: Tahoma, Verdana, Segoe UI, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--felt-dark);
+      color: #fff;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.08), transparent 24%),
+        radial-gradient(circle at 76% 12%, rgba(255,255,255,.06), transparent 22%),
+        linear-gradient(135deg, var(--felt-light), var(--felt) 38%, var(--felt-dark));
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 320px;
+    }
+
+    .titlebar {
+      padding-top: var(--safe-top);
+      background: linear-gradient(#2f74df, var(--xp-blue) 48%, var(--xp-blue-dark));
+      border-bottom: 1px solid #092e72;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.42);
+    }
+
+    .titlebar-inner {
+      min-height: 38px;
+      padding: 5px clamp(6px, 2vw, 16px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 112px;
+      font-weight: 700;
+      text-shadow: 0 1px #08306d;
+      margin-right: 4px;
+    }
+
+    .brand-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: #f8f8f8;
+      color: #d21f28;
+      display: grid;
+      place-items: center;
+      box-shadow: 1px 1px 0 rgba(0,0,0,.36);
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    button {
+      height: 28px;
+      border: 1px solid #6d695e;
+      border-top-color: #fff;
+      border-left-color: #fff;
+      border-radius: 3px;
+      background: linear-gradient(var(--chrome-hi), var(--chrome));
+      color: #111;
+      box-shadow: inset -1px -1px 0 var(--chrome-shadow);
+      font: 12px Tahoma, Verdana, Arial, sans-serif;
+      padding: 0 9px;
+    }
+
+    button {
+      min-width: 34px;
+      cursor: pointer;
+    }
+
+    button:active {
+      border: 1px solid #6d695e;
+      border-right-color: #fff;
+      border-bottom-color: #fff;
+      box-shadow: inset 1px 1px 0 var(--chrome-shadow);
+      padding-top: 1px;
+    }
+
+    button:disabled {
+      color: #777;
+      cursor: default;
+      opacity: .72;
+    }
+
+    .deal-modes {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+
+    .deal-mode {
+      min-width: 58px;
+      padding: 0 7px;
+    }
+
+    .deal-mode.active,
+    .deal-mode[aria-pressed="true"] {
+      border: 1px solid #4e668f;
+      border-right-color: #fff;
+      border-bottom-color: #fff;
+      background: linear-gradient(#fff8cf, #ffd84a);
+      box-shadow: inset 1px 1px 0 #b49724;
+      font-weight: 700;
+    }
+
+    .toolbar-separator {
+      margin-left: 8px;
+    }
+
+    .board-wrap {
+      position: relative;
+      overflow: auto;
+      overscroll-behavior: none;
+      padding: var(--board-pad);
+    }
+
+    .board {
+      width: var(--board-w);
+      min-height: 100%;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .top-row,
+    .tableau {
+      display: grid;
+      grid-template-columns: repeat(7, var(--card-w));
+      gap: var(--gap);
+    }
+
+    .top-row {
+      margin-bottom: clamp(14px, 3.2vw, 26px);
+    }
+
+    .tableau {
+      align-items: start;
+    }
+
+    .pile,
+    .tableau-col {
+      width: var(--card-w);
+      position: relative;
+    }
+
+    .pile {
+      height: var(--card-h);
+    }
+
+    .tableau-col {
+      min-height: calc(var(--card-h) + var(--fan) * 9);
+    }
+
+    .slot {
+      position: absolute;
+      inset: 0;
+      border: 2px solid rgba(255,255,255,.35);
+      border-right-color: rgba(0,0,0,.18);
+      border-bottom-color: rgba(0,0,0,.18);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(0,0,0,.08), rgba(255,255,255,.08)),
+        rgba(0,0,0,.08);
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,.18);
+    }
+
+    .slot.foundation::after {
+      content: attr(data-suit);
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,.28);
+      font-size: calc(var(--card-w) * .5);
+      font-family: Georgia, serif;
+    }
+
+    .spacer {
+      pointer-events: none;
+    }
+
+    .card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: var(--radius);
+      background: #f8f8f4;
+      border: 1px solid #1b1b1b;
+      box-shadow: 1px 2px 2px rgba(0,0,0,.32);
+      color: var(--ink);
+      cursor: pointer;
+      touch-action: none;
+      overflow: hidden;
+      transform: translate3d(0,0,0);
+      transition: box-shadow .08s ease, filter .08s ease;
+      --court-ink: #242633;
+      --court-skin: #f2d0a9;
+      --court-hair: #2b261f;
+      --court-mantle: #315d9c;
+      --court-suit: currentColor;
+      --court-shadow: rgba(36,38,51,.14);
+    }
+
+    .card.red {
+      color: #c51e25;
+      --court-mantle: #b92b39;
+      --court-suit: #c51e25;
+    }
+
+    .card.face-down {
+      background:
+        linear-gradient(45deg, rgba(255,255,255,.18) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%),
+        linear-gradient(#134aa0, #0a2e70);
+      background-size: 11px 11px, auto;
+      border: 2px solid #f4f4f4;
+      box-shadow: inset 0 0 0 3px #154eb0, inset 0 0 0 6px #f4f4f4, 1px 2px 2px rgba(0,0,0,.32);
+      cursor: default;
+    }
+
+    .card.face-down::after {
+      content: "";
+      position: absolute;
+      inset: 18%;
+      border: 2px solid rgba(255,255,255,.86);
+      border-radius: 5px;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,.28), transparent 45%),
+        rgba(11,47,120,.38);
+    }
+
+    .corner {
+      position: absolute;
+      display: flex;
+      align-items: flex-start;
+      gap: calc(var(--card-w) * .01);
+      font-weight: 700;
+      line-height: .9;
+      font-size: calc(var(--card-w) * .18);
+      letter-spacing: 0;
+      min-width: 0;
+    }
+
+    .rank {
+      display: block;
+      transform: scaleX(.78);
+      transform-origin: left center;
+    }
+
+    .corner.top {
+      top: 3%;
+      left: 3.5%;
+    }
+
+    .corner.bottom {
+      right: 3.5%;
+      bottom: 3%;
+      transform: rotate(180deg);
+    }
+
+    .suit {
+      font-family: Georgia, Times New Roman, serif;
+      font-size: calc(var(--card-w) * .145);
+      line-height: 1;
+      margin-top: calc(var(--card-w) * .01);
+    }
+
+    .pips {
+      position: absolute;
+      inset: 14% 6% 12%;
+      font-family: Georgia, Times New Roman, serif;
+      font-size: calc(var(--card-w) * .34);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .pips.rank-1 {
+      font-size: calc(var(--card-w) * .72);
+    }
+
+    .pip {
+      position: absolute;
+      opacity: .95;
+      transform: translate(-50%, -50%);
+    }
+
+    .pip.flip {
+      transform: translate(-50%, -50%) rotate(180deg);
+    }
+
+    .pip.large {
+      font-size: 1em;
+    }
+
+    .pip.pos-tl {
+      left: 25%;
+      top: 7%;
+    }
+
+    .pip.pos-tc {
+      left: 50%;
+      top: 9%;
+    }
+
+    .pip.pos-tr {
+      left: 75%;
+      top: 7%;
+    }
+
+    .pip.pos-ul {
+      left: 25%;
+      top: 25%;
+    }
+
+    .pip.pos-uc {
+      left: 50%;
+      top: 31%;
+    }
+
+    .pip.pos-ur {
+      left: 75%;
+      top: 25%;
+    }
+
+    .pip.pos-ml {
+      left: 25%;
+      top: 50%;
+    }
+
+    .pip.pos-mc {
+      left: 50%;
+      top: 50%;
+    }
+
+    .pip.pos-mr {
+      left: 75%;
+      top: 50%;
+    }
+
+    .pip.pos-ll {
+      left: 25%;
+      top: 75%;
+    }
+
+    .pip.pos-lc {
+      left: 50%;
+      top: 69%;
+    }
+
+    .pip.pos-lr {
+      left: 75%;
+      top: 75%;
+    }
+
+    .pip.pos-bl {
+      left: 25%;
+      top: 93%;
+    }
+
+    .pip.pos-bc {
+      left: 50%;
+      top: 91%;
+    }
+
+    .pip.pos-br {
+      left: 75%;
+      top: 93%;
+    }
+
+    .face-center {
+      position: absolute;
+      inset: 13% 9% 10%;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .court-art {
+      width: 100%;
+      height: 100%;
+      max-width: calc(var(--card-w) * .86);
+      max-height: calc(var(--card-w) * 1.16);
+      overflow: visible;
+    }
+
+    .court-line {
+      fill: none;
+      stroke: var(--court-ink);
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .court-thin {
+      stroke-width: 2.8;
+    }
+
+    .court-fill {
+      fill: var(--court-ink);
+    }
+
+    .court-hair {
+      fill: var(--court-hair);
+      stroke: var(--court-ink);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+
+    .court-robe {
+      fill: #fff8e8;
+      stroke: var(--court-ink);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+
+    .court-mantle {
+      fill: var(--court-mantle);
+      stroke: var(--court-ink);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+
+    .card.red .court-mantle {
+      fill: var(--court-mantle);
+    }
+
+    .court-soft {
+      fill: var(--court-shadow);
+    }
+
+    .court-gold {
+      fill: #d8ad27;
+      stroke: var(--court-ink);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+
+    .court-skin {
+      fill: var(--court-skin);
+      stroke: var(--court-ink);
+      stroke-width: 3;
+    }
+
+    .court-white {
+      fill: #fffdf2;
+      stroke: var(--court-ink);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+
+    .court-suit {
+      fill: var(--court-suit);
+      font-family: Georgia, Times New Roman, serif;
+      font-size: 25px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .selected {
+      box-shadow: 0 0 0 3px #ffd84a, 1px 2px 2px rgba(0,0,0,.32);
+      filter: brightness(1.04);
+    }
+
+    .hinted {
+      box-shadow: 0 0 0 3px #9be4ff, 1px 2px 2px rgba(0,0,0,.32);
+    }
+
+    .dragging {
+      pointer-events: none;
+      transition: none;
+      z-index: 5000 !important;
+      opacity: .96;
+    }
+
+    .moving {
+      pointer-events: none;
+      z-index: 5200 !important;
+      will-change: transform;
+    }
+
+    .celebration {
+      position: fixed;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 6500;
+    }
+
+    .celebration.running {
+      display: block;
+    }
+
+    .celebration-card {
+      position: absolute;
+      width: clamp(34px, 5.4vw, 58px);
+      height: calc(clamp(34px, 5.4vw, 58px) * 1.4);
+      border: 1px solid #151515;
+      border-radius: 6px;
+      background: #f8f8f4;
+      color: #151515;
+      box-shadow: 1px 2px 3px rgba(0,0,0,.34);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: clamp(14px, 2.1vw, 22px);
+      font-family: Georgia, Times New Roman, serif;
+      animation: win-card 1650ms cubic-bezier(.12,.72,.22,1) forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .celebration-card.red {
+      color: #c51e25;
+    }
+
+    @keyframes win-card {
+      0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg);
+      }
+      44% {
+        transform: translate3d(var(--tx-44), -28vh, 0) rotate(var(--rot-44));
+      }
+      72% {
+        transform: translate3d(var(--tx-72), var(--ty-72), 0) rotate(var(--rot-72));
+      }
+      88% {
+        transform: translate3d(var(--tx-88), var(--ty-88), 0) rotate(var(--rot-88));
+      }
+      100% {
+        opacity: .92;
+        transform: translate3d(var(--tx), var(--ty), 0) rotate(var(--rot));
+      }
+    }
+
+    .statusbar {
+      min-height: calc(32px + var(--safe-bottom));
+      padding: 5px clamp(8px, 2vw, 16px) calc(5px + var(--safe-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: linear-gradient(#e8e5dc, #c5c0b5);
+      border-top: 1px solid #fff;
+      color: #111;
+      box-shadow: inset 0 1px 0 #fff;
+      font-size: 12px;
+    }
+
+    .status-left,
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      min-height: 20px;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border: 1px solid #8a867b;
+      border-top-color: #fff;
+      border-left-color: #fff;
+      background: #efede6;
+      box-shadow: inset -1px -1px 0 #aaa397;
+      color: #111;
+      white-space: nowrap;
+    }
+
+    .message {
+      min-width: min(360px, 82vw);
+      color: #202020;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(0,0,0,.24);
+      z-index: 7000;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .dialog {
+      width: min(360px, 100%);
+      border: 1px solid #0d347b;
+      background: #ece9d8;
+      color: #111;
+      box-shadow: 4px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .dialog-title {
+      padding: 7px 9px;
+      background: linear-gradient(#2f74df, #1f5fbf 50%, #17478d);
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 1px #062b68;
+    }
+
+    .dialog-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .dialog-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .dialog-field label,
+    .dialog-label {
+      font-weight: 700;
+    }
+
+    .dialog-deal-modes {
+      width: fit-content;
+      display: grid;
+      grid-template-columns: repeat(2, max-content);
+      gap: 10px 14px;
+      justify-self: center;
+    }
+
+    .dialog-deal-modes .deal-mode {
+      width: 86px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 7px;
+      padding: 0 14px 14px;
+    }
+
+    @media (max-width: 560px) {
+      :root {
+        --board-pad: clamp(4px, 1.8vw, 8px);
+        --gap: clamp(4px, 1.3vw, 6px);
+        --card-w: clamp(34px, calc((100vw - var(--board-pad) * 2 - var(--gap) * 6) / 7), 64px);
+      }
+
+      .app {
+        min-width: 0;
+      }
+
+      .board-wrap {
+        overflow: hidden;
+        scrollbar-width: none;
+      }
+
+      .board-wrap::-webkit-scrollbar {
+        display: none;
+      }
+
+      .titlebar-inner {
+        gap: 5px;
+      }
+
+      .brand {
+        min-width: auto;
+      }
+
+      .brand span:last-child {
+        display: none;
+      }
+
+      button {
+        height: 30px;
+        padding: 0 7px;
+      }
+
+      .deal-mode {
+        min-width: 52px;
+      }
+
+      .toolbar {
+        gap: 4px;
+      }
+
+      .statusbar {
+        align-items: flex-start;
+      }
+
+      .message {
+        width: 100%;
+        min-width: 0;
+        order: 3;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      :root {
+        --card-w: clamp(30px, 7.1vw, 38px);
+        --fan: clamp(9px, 3.2vh, 12px);
+      }
+
+      .board-wrap {
+        padding-top: 6px;
+        padding-bottom: 3px;
+        overflow: hidden;
+        scrollbar-width: none;
+      }
+
+      .board-wrap::-webkit-scrollbar {
+        display: none;
+      }
+
+      .top-row {
+        margin-bottom: 7px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="titlebar">
+      <div class="titlebar-inner">
+        <div class="brand" aria-label="Solitaire">
+          <span class="brand-mark">A</span>
+          <span>Solitaire</span>
+        </div>
+        <div class="toolbar">
+          <div class="deal-modes" id="dealModes" aria-label="Deal difficulty">
+            <button class="deal-mode" type="button" data-deal-mode="easy" aria-pressed="false">Easy</button>
+            <button class="deal-mode" type="button" data-deal-mode="medium" aria-pressed="false">Medium</button>
+            <button class="deal-mode" type="button" data-deal-mode="hard" aria-pressed="false">Hard</button>
+            <button class="deal-mode" type="button" data-deal-mode="random" aria-pressed="false">Random</button>
+          </div>
+          <button id="newGame" class="toolbar-separator" title="Start a new deal">New</button>
+          <button id="restart" title="Restart this deal">Restart</button>
+          <button id="hint" title="Show a hint">Hint</button>
+          <button id="undo" class="toolbar-separator" title="Undo last move">Undo</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="board-wrap" id="boardWrap">
+      <div class="board" id="board">
+        <div class="top-row" id="topRow">
+          <div class="pile stock-pile" data-pile="stock"><div class="slot"></div></div>
+          <div class="pile waste-pile" data-pile="waste"><div class="slot"></div></div>
+          <div class="pile spacer"></div>
+          <div class="pile foundation-pile" data-pile="foundation" data-pile-index="0"><div class="slot foundation" data-suit="S"></div></div>
+          <div class="pile foundation-pile" data-pile="foundation" data-pile-index="1"><div class="slot foundation" data-suit="H"></div></div>
+          <div class="pile foundation-pile" data-pile="foundation" data-pile-index="2"><div class="slot foundation" data-suit="D"></div></div>
+          <div class="pile foundation-pile" data-pile="foundation" data-pile-index="3"><div class="slot foundation" data-suit="C"></div></div>
+        </div>
+        <div class="tableau" id="tableau">
+          <div class="tableau-col" data-pile="tableau" data-pile-index="0"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="1"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="2"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="3"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="4"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="5"><div class="slot"></div></div>
+          <div class="tableau-col" data-pile="tableau" data-pile-index="6"><div class="slot"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="statusbar">
+      <div class="status-left">
+        <span class="badge" id="moves">Moves 0</span>
+        <span class="badge" id="time">00:00</span>
+        <span class="badge" id="score">Score 0</span>
+        <span class="badge" id="difficulty">Easy</span>
+      </div>
+      <div class="message" id="message" hidden>Ready</div>
+      <div class="status-right">
+        <span class="badge" id="bank">Bank 0/0/0</span>
+      </div>
+    </footer>
+  </main>
+
+  <div class="celebration" id="celebration" aria-hidden="true"></div>
+
+  <div class="modal" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="dialog">
+      <div class="dialog-title" id="winTitle">Game won</div>
+      <div class="dialog-body">
+        <div id="winText"></div>
+        <div class="dialog-field">
+          <div class="dialog-label">Next deal</div>
+          <div class="deal-modes dialog-deal-modes" id="winDealModes" aria-label="Next deal difficulty">
+            <button class="deal-mode" type="button" data-win-deal-mode="easy" aria-pressed="false">Easy</button>
+            <button class="deal-mode" type="button" data-win-deal-mode="medium" aria-pressed="false">Medium</button>
+            <button class="deal-mode" type="button" data-win-deal-mode="hard" aria-pressed="false">Hard</button>
+            <button class="deal-mode" type="button" data-win-deal-mode="random" aria-pressed="false">Random</button>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="closeWin">Close</button>
+        <button id="newWinGame">New game</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const SUITS = ["S", "H", "D", "C"];
+      const SUIT_SYMBOLS = ["\u2660", "\u2665", "\u2666", "\u2663"];
+      const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+      const DEAL_MODES = ["easy", "medium", "hard", "random"];
+      const PIP_LAYOUTS = {
+        1: [{ pos: "mc", large: true }],
+        2: [{ pos: "tc" }, { pos: "bc", flip: true }],
+        3: [{ pos: "tc" }, { pos: "mc" }, { pos: "bc", flip: true }],
+        4: [{ pos: "tl" }, { pos: "tr" }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        5: [{ pos: "tl" }, { pos: "tr" }, { pos: "mc" }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        6: [{ pos: "tl" }, { pos: "tr" }, { pos: "ml" }, { pos: "mr" }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        7: [{ pos: "tl" }, { pos: "tr" }, { pos: "uc" }, { pos: "ml" }, { pos: "mr" }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        8: [{ pos: "tl" }, { pos: "tr" }, { pos: "uc" }, { pos: "ml" }, { pos: "mr" }, { pos: "lc", flip: true }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        9: [{ pos: "tl" }, { pos: "tr" }, { pos: "ul" }, { pos: "ur" }, { pos: "mc" }, { pos: "ll", flip: true }, { pos: "lr", flip: true }, { pos: "bl", flip: true }, { pos: "br", flip: true }],
+        10: [{ pos: "tl" }, { pos: "tr" }, { pos: "ul" }, { pos: "ur" }, { pos: "uc" }, { pos: "lc", flip: true }, { pos: "ll", flip: true }, { pos: "lr", flip: true }, { pos: "bl", flip: true }, { pos: "br", flip: true }]
+      };
+      const BANK_KEY = "singleFileSolitaire.bank.v2";
+      const STATS_KEY = "singleFileSolitaire.stats.v1";
+      const DEAL_MODE_KEY = "singleFileSolitaire.dealMode.v1";
+      const MAX_BANK = 3;
+      const board = document.getElementById("board");
+      const tableauEl = document.getElementById("tableau");
+      const boardWrap = document.getElementById("boardWrap");
+      const dealModeButtons = [...document.querySelectorAll("[data-deal-mode]")];
+      const newGameBtn = document.getElementById("newGame");
+      const restartBtn = document.getElementById("restart");
+      const undoBtn = document.getElementById("undo");
+      const hintBtn = document.getElementById("hint");
+      const movesEl = document.getElementById("moves");
+      const timeEl = document.getElementById("time");
+      const scoreEl = document.getElementById("score");
+      const difficultyEl = document.getElementById("difficulty");
+      const messageEl = document.getElementById("message");
+      const bankEl = document.getElementById("bank");
+      const celebration = document.getElementById("celebration");
+      const winModal = document.getElementById("winModal");
+      const winText = document.getElementById("winText");
+      const winDealModeButtons = [...document.querySelectorAll("[data-win-deal-mode]")];
+      const closeWin = document.getElementById("closeWin");
+      const newWinGame = document.getElementById("newWinGame");
+
+      let game = null;
+      let selected = null;
+      let pointer = null;
+      let hintTimer = 0;
+      let winTimer = 0;
+      let autoFinishTimer = 0;
+      let queuedAnimations = [];
+      let pendingDealMode = null;
+      let bank = loadBank();
+      let generator = null;
+      let stats = loadStats();
+      let autoSolving = false;
+      let autoSolveToken = 0;
+      let selectedDealMode = loadDealMode();
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      function cardSuit(id) {
+        return Math.floor(id / 13);
+      }
+
+      function cardRank(id) {
+        return (id % 13) + 1;
+      }
+
+      function cardColor(id) {
+        return cardSuit(id) === 1 || cardSuit(id) === 2 ? "red" : "black";
+      }
+
+      function cardLabel(id) {
+        return RANKS[cardRank(id) - 1] + SUIT_SYMBOLS[cardSuit(id)];
+      }
+
+      function rng(seed) {
+        let t = seed >>> 0;
+        return () => {
+          t += 0x6D2B79F5;
+          let x = t;
+          x = Math.imul(x ^ (x >>> 15), x | 1);
+          x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+          return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function randomSeed() {
+        const a = new Uint32Array(1);
+        crypto.getRandomValues(a);
+        return a[0] >>> 0;
+      }
+
+      function shuffledDeck(seed) {
+        const deck = Array.from({ length: 52 }, (_, i) => i);
+        const rand = rng(seed);
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(rand() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        return deck;
+      }
+
+      function dealFromDeck(deck, meta = {}) {
+        const tableau = Array.from({ length: 7 }, () => []);
+        let n = 0;
+        for (let col = 0; col < 7; col++) {
+          for (let row = 0; row <= col; row++) {
+            tableau[col].push({ id: deck[n++], up: row === col });
+          }
+        }
+        return {
+          tableau,
+          foundations: [[], [], [], []],
+          stock: deck.slice(n),
+          waste: [],
+          history: [],
+          moves: 0,
+          score: 0,
+          startedAt: null,
+          elapsedBefore: 0,
+          won: false,
+          deal: {
+            type: meta.type || "random",
+            seed: meta.seed || null,
+            deck: deck.slice(),
+            difficulty: meta.difficulty || "Random",
+            metrics: meta.metrics || null
+          }
+        };
+      }
+
+      function makeStarterDeal() {
+        const topToBottom = [
+          [0],
+          [13, 1],
+          [26, 14, 2],
+          [39, 27, 15, 3],
+          [40, 28, 16, 4, 5],
+          [41, 29, 17, 6, 7, 8],
+          [42, 30, 18, 9, 10, 11, 12]
+        ];
+        const used = new Set();
+        const tableau = topToBottom.map((column) => {
+          const pile = column.slice().reverse().map((id, index, arr) => {
+            used.add(id);
+            return { id, up: index === arr.length - 1 };
+          });
+          return pile;
+        });
+        const stockOrder = [];
+        for (let rank = 1; rank <= 13; rank++) {
+          for (let suit = 0; suit < 4; suit++) {
+            const id = suit * 13 + rank - 1;
+            if (!used.has(id)) stockOrder.push(id);
+          }
+        }
+        return {
+          tableau,
+          foundations: [[], [], [], []],
+          stock: stockOrder,
+          waste: [],
+          history: [],
+          moves: 0,
+          score: 0,
+          startedAt: null,
+          elapsedBefore: 0,
+          won: false,
+          deal: {
+            type: "starter",
+            seed: null,
+            deck: null,
+            difficulty: "Easy",
+            metrics: { solved: true, nodes: 1, depth: 76, resets: 0, draws: stockOrder.length, reveals: 21 }
+          }
+        };
+      }
+
+      function cloneGame(source) {
+        return {
+          tableau: source.tableau.map((pile) => pile.map((card) => ({ id: card.id, up: card.up }))),
+          foundations: source.foundations.map((pile) => pile.slice()),
+          stock: source.stock.slice(),
+          waste: source.waste.slice(),
+          history: [],
+          moves: source.moves,
+          score: source.score,
+          startedAt: source.startedAt,
+          elapsedBefore: source.elapsedBefore,
+          won: source.won,
+          deal: {
+            type: source.deal.type,
+            seed: source.deal.seed,
+            deck: source.deal.deck ? source.deal.deck.slice() : null,
+            difficulty: source.deal.difficulty,
+            metrics: source.deal.metrics ? { ...source.deal.metrics } : null
+          }
+        };
+      }
+
+      function snapshot() {
+        const copy = cloneGame(game);
+        copy.elapsedBefore = elapsedSeconds();
+        return copy;
+      }
+
+      function saveHistory() {
+        game.history.push(snapshot());
+        if (game.history.length > 240) game.history.shift();
+      }
+
+      function restore(snapshotGame) {
+        const history = game.history;
+        game = cloneGame(snapshotGame);
+        game.history = history;
+        game.startedAt = Number.isFinite(snapshotGame.startedAt) ? Date.now() : null;
+        game.elapsedBefore = snapshotGame.elapsedBefore || 0;
+      }
+
+      function loadBank() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(BANK_KEY) || "{}");
+          return {
+            easy: sanitizeDeals(parsed.easy),
+            medium: sanitizeDeals(parsed.medium),
+            hard: sanitizeDeals(parsed.hard)
+          };
+        } catch {
+          return { easy: [], medium: [], hard: [] };
+        }
+      }
+
+      function sanitizeDeals(deals) {
+        if (!Array.isArray(deals)) return [];
+        const seen = new Set();
+        return deals
+          .filter((deal) => deal && Number.isFinite(deal.seed) && !seen.has(deal.seed) && seen.add(deal.seed))
+          .slice(0, MAX_BANK);
+      }
+
+      function saveBank() {
+        localStorage.setItem(BANK_KEY, JSON.stringify(bank));
+        syncGenerator();
+        renderBank();
+      }
+
+      function loadStats() {
+        try {
+          return JSON.parse(localStorage.getItem(STATS_KEY) || "{\"wins\":0,\"played\":0}");
+        } catch {
+          return { wins: 0, played: 0 };
+        }
+      }
+
+      function saveStats() {
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+      }
+
+      function normalizeDealMode(mode) {
+        return DEAL_MODES.includes(mode) ? mode : "easy";
+      }
+
+      function loadDealMode() {
+        try {
+          return normalizeDealMode(localStorage.getItem(DEAL_MODE_KEY));
+        } catch {
+          return "easy";
+        }
+      }
+
+      function saveDealMode() {
+        localStorage.setItem(DEAL_MODE_KEY, selectedDealMode);
+      }
+
+      function syncDealModeButtons() {
+        dealModeButtons.forEach((button) => {
+          const active = button.dataset.dealMode === selectedDealMode;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        winDealModeButtons.forEach((button) => {
+          const active = button.dataset.winDealMode === selectedDealMode;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+      }
+
+      function setDealMode(mode) {
+        selectedDealMode = normalizeDealMode(mode);
+        saveDealMode();
+        syncDealModeButtons();
+      }
+
+      function bankCounts() {
+        return {
+          easy: bank.easy.length,
+          medium: bank.medium.length,
+          hard: bank.hard.length
+        };
+      }
+
+      function allBankSeeds() {
+        return [...bank.easy, ...bank.medium, ...bank.hard].map((deal) => deal.seed);
+      }
+
+      function addDealToBank(deal) {
+        const difficulty = deal.difficulty.toLowerCase();
+        if (!bank[difficulty]) return;
+        if (allBankSeeds().includes(deal.seed)) return;
+        if (pendingDealMode && dealMatchesMode(deal, pendingDealMode)) {
+          const mode = pendingDealMode;
+          pendingDealMode = null;
+          startGameFromDeal({ ...deal, type: mode });
+          return;
+        }
+        if (bank[difficulty].length >= MAX_BANK) return;
+        bank[difficulty].push({
+          seed: deal.seed,
+          difficulty: deal.difficulty,
+          metrics: deal.metrics || null
+        });
+        saveBank();
+        if (!autoSolving && !game?.won) {
+          setMessage(`Found ${deal.difficulty.toLowerCase()} solvable deal`);
+        }
+      }
+
+      function renderBank() {
+        bankEl.textContent = `Bank ${bank.easy.length}/${bank.medium.length}/${bank.hard.length}`;
+      }
+
+      function dealMatchesMode(deal, mode) {
+        if (!deal || !mode) return false;
+        return deal.difficulty.toLowerCase() === mode;
+      }
+
+      function startGameFromDeal(deal) {
+        pendingDealMode = null;
+        autoSolving = false;
+        autoSolveToken += 1;
+        clearTimeout(autoFinishTimer);
+        clearTimeout(winTimer);
+        clearWinAnimation();
+        if (deal && deal.deck) {
+          game = dealFromDeck(deal.deck, deal);
+        } else if (deal && Number.isFinite(deal.seed)) {
+          game = dealFromDeck(shuffledDeck(deal.seed), deal);
+        } else {
+          game = makeStarterDeal();
+        }
+        selected = null;
+        pointer = null;
+        winModal.classList.remove("open");
+        stats.played += 1;
+        saveStats();
+        render();
+        setMessage(`${game.deal.difficulty} deal`);
+        syncGenerator();
+      }
+
+      function startInitialGame() {
+        if (selectedDealMode === "random") {
+          startGameFromDeal({
+            seed: randomSeed(),
+            difficulty: "Random",
+            type: "random"
+          });
+          return;
+        }
+        const deal = chooseBanked(selectedDealMode);
+        if (deal) {
+          saveBank();
+          startGameFromDeal({ ...deal, type: selectedDealMode });
+        } else {
+          startGameFromDeal(makeStarterDeal().deal);
+        }
+      }
+
+      function chooseBanked(mode) {
+        if (mode === "easy" || mode === "medium" || mode === "hard") {
+          return bank[mode].shift() || null;
+        }
+        return null;
+      }
+
+      function newGame(mode = selectedDealMode) {
+        mode = normalizeDealMode(mode);
+        setDealMode(mode);
+        clearTimeout(autoFinishTimer);
+        if (mode === "random") {
+          startGameFromDeal({
+            seed: randomSeed(),
+            difficulty: "Random",
+            type: "random"
+          });
+          return;
+        }
+        const deal = chooseBanked(mode);
+        if (deal) {
+          saveBank();
+          startGameFromDeal({
+            ...deal,
+            type: mode
+          });
+          return;
+        }
+        requestGeneratedDeal(mode);
+      }
+
+      function currentGameDealMode() {
+        if (!game?.deal) return selectedDealMode;
+        const difficulty = String(game.deal.difficulty || "").toLowerCase();
+        if (DEAL_MODES.includes(difficulty)) return difficulty;
+        return normalizeDealMode(game.deal.type);
+      }
+
+      function requestGeneratedDeal(mode) {
+        if (!generator) {
+          startGameFromDeal(makeStarterDeal().deal);
+          setMessage("Deal generator unavailable; using starter deal");
+          return;
+        }
+        pendingDealMode = mode;
+        clearSelection();
+        if (generator) generator.postMessage({ type: "request", mode });
+        setMessage(`Searching for a ${mode} deal`);
+        render();
+      }
+
+      function restartGame() {
+        if (!game) return;
+        const deal = game.deal;
+        if (deal.deck) startGameFromDeal(deal);
+        else if (Number.isFinite(deal.seed)) startGameFromDeal(deal);
+        else startGameFromDeal(makeStarterDeal().deal);
+      }
+
+      function elapsedSeconds() {
+        if (!game) return 0;
+        if (game.won) return game.elapsedBefore || 0;
+        if (!Number.isFinite(game.startedAt)) return game.elapsedBefore || 0;
+        return game.elapsedBefore + Math.floor((Date.now() - game.startedAt) / 1000);
+      }
+
+      function startTimer() {
+        if (!game || game.won || autoSolving || Number.isFinite(game.startedAt)) return;
+        game.startedAt = Date.now();
+      }
+
+      function formatTime(total) {
+        const minutes = Math.floor(total / 60).toString().padStart(2, "0");
+        const seconds = Math.floor(total % 60).toString().padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function setMessage(text) {
+        messageEl.textContent = text;
+      }
+
+      function courtMarkup(rankValue, suit) {
+        if (rankValue === 11) {
+          return `
+            <div class="face-center">
+              <svg class="court-art court-jack" viewBox="0 0 120 160" aria-hidden="true" focusable="false">
+                <path class="court-soft" d="M20 149 C28 118 42 101 60 101 C78 101 92 118 100 149 L90 156 H30 Z"></path>
+                <path class="court-mantle" d="M18 148 C24 117 40 96 60 96 C80 96 96 117 102 148 L90 156 H30 Z"></path>
+                <path class="court-robe" d="M38 148 L46 103 L60 116 L74 103 L82 148 Z"></path>
+                <path class="court-white" d="M40 101 L51 92 L60 104 L69 92 L80 101 L70 118 L60 112 L50 118 Z"></path>
+                <rect class="court-skin" x="50" y="84" width="20" height="24" rx="8"></rect>
+                <path class="court-hair" d="M32 72 C30 45 43 31 60 31 C78 31 90 46 88 72 C82 58 72 50 60 50 C48 50 38 58 32 72 Z"></path>
+                <ellipse class="court-skin" cx="60" cy="64" rx="21" ry="24"></ellipse>
+                <path class="court-hair" d="M36 57 C42 43 51 37 63 38 C73 39 81 47 85 58 C74 54 65 54 55 48 C51 55 43 57 36 57 Z"></path>
+                <path class="court-gold" d="M35 41 L45 26 L56 39 L68 25 L80 41 Z"></path>
+                <path class="court-line court-thin" d="M49 65 H53 M67 65 H71 M51 79 Q60 84 69 79"></path>
+                <path class="court-line" d="M92 38 L80 139"></path>
+                <path class="court-gold" d="M90 24 L103 37 L87 43 Z"></path>
+                <path class="court-gold" d="M50 119 L60 106 L70 119 L65 131 H55 Z"></path>
+                <text class="court-suit" x="60" y="121">${suit}</text>
+              </svg>
+            </div>
+          `;
+        }
+        if (rankValue === 12) {
+          return `
+            <div class="face-center">
+              <svg class="court-art court-queen" viewBox="0 0 120 160" aria-hidden="true" focusable="false">
+                <path class="court-soft" d="M18 149 C25 116 41 98 60 98 C79 98 95 116 102 149 L91 156 H29 Z"></path>
+                <path class="court-mantle" d="M18 148 C25 115 41 95 60 95 C79 95 95 115 102 148 L90 156 H30 Z"></path>
+                <path class="court-robe" d="M36 149 L45 101 L60 118 L75 101 L84 149 Z"></path>
+                <path class="court-white" d="M37 100 L50 90 L60 105 L70 90 L83 100 L72 121 L60 113 L48 121 Z"></path>
+                <path class="court-hair" d="M29 78 C23 45 38 26 60 26 C82 26 97 45 91 78 C86 95 75 102 60 102 C45 102 34 95 29 78 Z"></path>
+                <rect class="court-skin" x="50" y="84" width="20" height="25" rx="8"></rect>
+                <ellipse class="court-skin" cx="60" cy="63" rx="21" ry="24"></ellipse>
+                <path class="court-hair" d="M38 58 C43 44 52 36 63 36 C76 37 84 47 87 62 C75 58 66 53 58 46 C54 54 46 58 38 58 Z"></path>
+                <path class="court-gold" d="M28 43 L37 20 L50 36 L60 17 L70 36 L83 20 L92 43 Z"></path>
+                <path class="court-line court-thin" d="M49 64 H53 M67 64 H71 M52 78 Q60 83 68 78"></path>
+                <path class="court-gold" d="M48 116 C48 109 56 108 60 115 C64 108 72 109 72 116 C72 124 60 131 60 131 C60 131 48 124 48 116 Z"></path>
+                <path class="court-line court-thin" d="M38 140 Q60 150 82 140"></path>
+                <text class="court-suit" x="60" y="119">${suit}</text>
+              </svg>
+            </div>
+          `;
+        }
+        return `
+          <div class="face-center">
+            <svg class="court-art court-king" viewBox="0 0 120 160" aria-hidden="true" focusable="false">
+              <path class="court-soft" d="M17 149 C24 113 40 94 60 94 C80 94 96 113 103 149 L91 156 H29 Z"></path>
+              <path class="court-mantle" d="M16 148 C23 112 40 92 60 92 C80 92 97 112 104 148 L91 156 H29 Z"></path>
+              <path class="court-robe" d="M35 149 L44 98 L60 119 L76 98 L85 149 Z"></path>
+              <path class="court-white" d="M37 97 L50 88 L60 105 L70 88 L83 97 L72 121 L60 112 L48 121 Z"></path>
+              <rect class="court-skin" x="50" y="82" width="20" height="27" rx="8"></rect>
+              <path class="court-hair" d="M31 71 C30 45 43 30 60 30 C77 30 90 45 89 71 C82 58 73 51 60 51 C47 51 38 58 31 71 Z"></path>
+              <ellipse class="court-skin" cx="60" cy="63" rx="22" ry="25"></ellipse>
+              <path class="court-hair" d="M39 75 C43 98 77 98 81 75 C78 108 42 108 39 75 Z"></path>
+              <path class="court-hair" d="M36 57 C42 42 51 36 62 37 C75 38 83 46 86 58 C75 55 66 52 58 46 C54 54 45 57 36 57 Z"></path>
+              <path class="court-gold" d="M27 43 L36 18 L49 36 L60 15 L71 36 L84 18 L93 43 Z"></path>
+              <path class="court-line court-thin" d="M49 64 H53 M67 64 H71 M53 79 Q60 83 67 79"></path>
+              <path class="court-gold" d="M48 115 L60 101 L72 115 L66 130 H54 Z"></path>
+              <path class="court-line" d="M94 35 V139"></path>
+              <circle class="court-gold" cx="94" cy="25" r="8"></circle>
+              <text class="court-suit" x="60" y="118">${suit}</text>
+            </svg>
+          </div>
+        `;
+      }
+
+      function pipMarkup(rankValue, rank, suit) {
+        if (rankValue > 10) {
+          return courtMarkup(rankValue, suit);
+        }
+        return `
+          <div class="pips rank-${rankValue}" data-pip-count="${rankValue}">
+            ${PIP_LAYOUTS[rankValue].map((pip) => `
+              <span class="pip pos-${pip.pos}${pip.flip ? " flip" : ""}${pip.large ? " large" : ""}">${suit}</span>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      function createCard(card, pile, pileIndex, cardIndex, top) {
+        const el = document.createElement("div");
+        el.className = "card";
+        el.dataset.pile = pile;
+        el.dataset.pileIndex = String(pileIndex);
+        el.dataset.cardIndex = String(cardIndex);
+        el.dataset.cardId = String(card.id);
+        el.style.top = `${top}px`;
+        el.style.zIndex = String(20 + cardIndex);
+        if (!card.up) {
+          el.classList.add("face-down");
+          return el;
+        }
+        if (cardColor(card.id) === "red") el.classList.add("red");
+        const rankValue = cardRank(card.id);
+        const rank = RANKS[rankValue - 1];
+        const suit = SUIT_SYMBOLS[cardSuit(card.id)];
+        el.innerHTML = `
+          <div class="corner top"><span class="rank">${rank}</span><span class="suit">${suit}</span></div>
+          ${pipMarkup(rankValue, rank, suit)}
+          <div class="corner bottom"><span class="rank">${rank}</span><span class="suit">${suit}</span></div>
+        `;
+        return el;
+      }
+
+      function clearCards() {
+        document.querySelectorAll(".card").forEach((card) => card.remove());
+      }
+
+      function render() {
+        if (!game) return;
+        clearTimeout(hintTimer);
+        clearCards();
+        document.querySelector(".stock-pile .slot").style.opacity = game.stock.length ? "0" : "1";
+        if (game.stock.length) {
+          const back = createCard({ id: 0, up: false }, "stock", 0, game.stock.length - 1, 0);
+          back.dataset.pile = "stock";
+          document.querySelector(".stock-pile").appendChild(back);
+        }
+        if (game.waste.length) {
+          const wastePileEl = document.querySelector(".waste-pile");
+          const firstVisible = Math.max(0, game.waste.length - 2);
+          for (let index = firstVisible; index < game.waste.length; index++) {
+            const id = game.waste[index];
+            wastePileEl.appendChild(createCard({ id, up: true }, "waste", 0, index, 0));
+          }
+        }
+        game.foundations.forEach((pile, suit) => {
+          if (!pile.length) return;
+          const foundationEl = document.querySelector(`.foundation-pile[data-pile-index="${suit}"]`);
+          const incomingIndexes = queuedAnimations
+            .filter((animation) => animation.target?.pile === "foundation" && animation.target.index === suit)
+            .map((animation) => pile.indexOf(animation.id))
+            .filter((index) => index >= 0);
+          const firstVisible = incomingIndexes.length
+            ? Math.max(0, Math.min(...incomingIndexes) - 1)
+            : pile.length - 1;
+          for (let index = firstVisible; index < pile.length; index++) {
+            const id = pile[index];
+            foundationEl.appendChild(createCard({ id, up: true }, "foundation", suit, index, 0));
+          }
+        });
+        const fan = currentFan();
+        game.tableau.forEach((pile, col) => {
+          const colEl = tableauEl.children[col];
+          colEl.style.minHeight = `${Math.max(cssNumber("--card-h"), cssNumber("--card-h") + fan * Math.max(9, pile.length - 1))}px`;
+          pile.forEach((card, index) => {
+            colEl.appendChild(createCard(card, "tableau", col, index, index * fan));
+          });
+        });
+        if (selected) applySelectionClass();
+        movesEl.textContent = `Moves ${game.moves}`;
+        timeEl.textContent = formatTime(elapsedSeconds());
+        scoreEl.textContent = `Score ${game.score}`;
+        difficultyEl.textContent = game.deal.difficulty || "Random";
+        const waitingForDeal = !!pendingDealMode;
+        syncDealModeButtons();
+        dealModeButtons.forEach((button) => { button.disabled = autoSolving || waitingForDeal; });
+        winDealModeButtons.forEach((button) => { button.disabled = autoSolving || waitingForDeal; });
+        undoBtn.disabled = autoSolving || waitingForDeal || !game.history.length;
+        newGameBtn.disabled = autoSolving || waitingForDeal;
+        newWinGame.disabled = autoSolving || waitingForDeal;
+        restartBtn.disabled = autoSolving || waitingForDeal;
+        hintBtn.disabled = autoSolving || waitingForDeal || game.won;
+        renderBank();
+      }
+
+      function plainRect(rect) {
+        return {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height
+        };
+      }
+
+      function findFaceUpCardElement(id) {
+        return [...document.querySelectorAll(`.card[data-card-id="${id}"]`)]
+          .find((el) => !el.classList.contains("face-down")) || null;
+      }
+
+      function cardRect(id) {
+        const el = findFaceUpCardElement(id);
+        return el ? plainRect(el.getBoundingClientRect()) : null;
+      }
+
+      function pileRect(type, index = 0) {
+        const selector = type === "tableau"
+          ? `.tableau-col[data-pile-index="${index}"]`
+          : type === "foundation"
+            ? `.foundation-pile[data-pile-index="${index}"]`
+            : `.${type}-pile`;
+        const el = document.querySelector(selector);
+        return el ? plainRect(el.getBoundingClientRect()) : null;
+      }
+
+      function queueCardAnimations(ids, fallbackRect = null, target = null) {
+        ids.forEach((id) => {
+          const from = cardRect(id) || fallbackRect;
+          if (from) queuedAnimations.push({ id, from, target });
+        });
+      }
+
+      function playQueuedAnimations() {
+        if (!queuedAnimations.length) return;
+        const animations = queuedAnimations;
+        queuedAnimations = [];
+        if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+        animations.forEach(({ id, from }) => {
+          const el = findFaceUpCardElement(id);
+          if (!el) return;
+          const to = el.getBoundingClientRect();
+          const dx = from.left - to.left;
+          const dy = from.top - to.top;
+          if (Math.hypot(dx, dy) < 2) return;
+          el.classList.add("moving");
+          const distance = Math.hypot(dx, dy);
+          const duration = Math.min(260, Math.max(130, distance * 0.42));
+          const animation = el.animate(
+            [
+              { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+              { transform: "translate3d(0, 0, 0)" }
+            ],
+            { duration, easing: "cubic-bezier(.18,.78,.22,1)" }
+          );
+          const done = () => el.classList.remove("moving");
+          animation.addEventListener("finish", done, { once: true });
+          animation.addEventListener("cancel", done, { once: true });
+        });
+      }
+
+      function renderAnimated() {
+        render();
+        playQueuedAnimations();
+      }
+
+      function cssNumber(name) {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        const probe = document.createElement("div");
+        probe.style.position = "absolute";
+        probe.style.visibility = "hidden";
+        probe.style.width = value;
+        document.body.appendChild(probe);
+        const pixels = probe.getBoundingClientRect().width;
+        probe.remove();
+        return pixels;
+      }
+
+      function currentFan() {
+        const baseFan = cssNumber("--fan");
+        if (!game) return baseFan;
+        const wrapBox = boardWrap.getBoundingClientRect();
+        const wrapStyle = getComputedStyle(boardWrap);
+        const topRowStyle = getComputedStyle(document.getElementById("topRow"));
+        const verticalPadding = parseFloat(wrapStyle.paddingTop) + parseFloat(wrapStyle.paddingBottom);
+        const topRowGap = parseFloat(topRowStyle.marginBottom) || 0;
+        const cardHeight = cssNumber("--card-h");
+        const fanSteps = Math.max(9, ...game.tableau.map((pile) => Math.max(0, pile.length - 1)));
+        const availableFanSpace = wrapBox.height - verticalPadding - cardHeight - topRowGap - cardHeight;
+        if (fanSteps <= 0 || availableFanSpace <= 0) return Math.max(4, Math.min(baseFan, 4));
+        return Math.max(4, Math.min(baseFan, availableFanSpace / fanSteps));
+      }
+
+      function getPile(type, index) {
+        if (type === "tableau") return game.tableau[index];
+        if (type === "foundation") return game.foundations[index];
+        if (type === "waste") return game.waste;
+        if (type === "stock") return game.stock;
+        return null;
+      }
+
+      function topTableauCard(index) {
+        const pile = game.tableau[index];
+        return pile.length ? pile[pile.length - 1] : null;
+      }
+
+      function isAlternating(a, b) {
+        return cardColor(a) !== cardColor(b);
+      }
+
+      function canMoveToFoundation(id) {
+        const suit = cardSuit(id);
+        return game.foundations[suit].length === cardRank(id) - 1;
+      }
+
+      function canMoveToTableau(id, targetIndex) {
+        const target = game.tableau[targetIndex];
+        if (!target.length) return cardRank(id) === 13;
+        const top = target[target.length - 1];
+        return top.up && isAlternating(id, top.id) && cardRank(id) + 1 === cardRank(top.id);
+      }
+
+      function allTableauCardsVisible() {
+        return game && game.tableau.every((pile) => pile.every((card) => card.up));
+      }
+
+      function validTableauStack(pile, index) {
+        if (!pile[index] || !pile[index].up) return false;
+        for (let i = index; i < pile.length - 1; i++) {
+          const lower = pile[i];
+          const upper = pile[i + 1];
+          if (!lower.up || !upper.up) return false;
+          if (!isAlternating(lower.id, upper.id)) return false;
+          if (cardRank(lower.id) !== cardRank(upper.id) + 1) return false;
+        }
+        return true;
+      }
+
+      function selectionFromCard(cardEl) {
+        const pile = cardEl.dataset.pile;
+        const pileIndex = Number(cardEl.dataset.pileIndex || 0);
+        const cardIndex = Number(cardEl.dataset.cardIndex || 0);
+        if (pile === "stock") return null;
+        if (pile === "waste") {
+          if (cardIndex !== game.waste.length - 1) return null;
+          return { pile, pileIndex: 0, cardIndex, ids: [game.waste[cardIndex]] };
+        }
+        if (pile === "foundation") {
+          const foundation = game.foundations[pileIndex];
+          if (cardIndex !== foundation.length - 1) return null;
+          return { pile, pileIndex, cardIndex, ids: [foundation[cardIndex]] };
+        }
+        const tableau = game.tableau[pileIndex];
+        if (!validTableauStack(tableau, cardIndex)) return null;
+        return {
+          pile,
+          pileIndex,
+          cardIndex,
+          ids: tableau.slice(cardIndex).map((card) => card.id)
+        };
+      }
+
+      function sameSelection(a, b) {
+        return a && b && a.pile === b.pile && a.pileIndex === b.pileIndex && a.cardIndex === b.cardIndex;
+      }
+
+      function clearSelection() {
+        selected = null;
+        document.querySelectorAll(".selected").forEach((el) => el.classList.remove("selected"));
+      }
+
+      function applySelectionClass() {
+        document.querySelectorAll(".selected").forEach((el) => el.classList.remove("selected"));
+        if (!selected) return;
+        if (selected.pile === "tableau") {
+          for (let i = selected.cardIndex; i < game.tableau[selected.pileIndex].length; i++) {
+            const el = document.querySelector(`.card[data-pile="tableau"][data-pile-index="${selected.pileIndex}"][data-card-index="${i}"]`);
+            if (el) el.classList.add("selected");
+          }
+        } else {
+          const el = document.querySelector(`.card[data-pile="${selected.pile}"][data-pile-index="${selected.pileIndex}"][data-card-index="${selected.cardIndex}"]`);
+          if (el) el.classList.add("selected");
+        }
+      }
+
+      function revealTopIfNeeded(pileIndex) {
+        const pile = game.tableau[pileIndex];
+        if (pile.length && !pile[pile.length - 1].up) {
+          pile[pile.length - 1].up = true;
+          game.score += 5;
+          return true;
+        }
+        return false;
+      }
+
+      function removeSelection(sel) {
+        if (sel.pile === "waste") return game.waste.splice(sel.cardIndex, 1).map((id) => ({ id, up: true }));
+        if (sel.pile === "foundation") return game.foundations[sel.pileIndex].splice(sel.cardIndex, 1).map((id) => ({ id, up: true }));
+        return game.tableau[sel.pileIndex].splice(sel.cardIndex);
+      }
+
+      function tryMoveSelection(sel, targetPile, targetIndex) {
+        if (!sel || game.won || autoSolving) return false;
+        if (targetPile === "stock" || targetPile === "waste") return false;
+        if (targetPile === sel.pile && targetIndex === sel.pileIndex) return false;
+        const firstId = sel.ids[0];
+        if (targetPile === "foundation") {
+          if (sel.ids.length !== 1 || !canMoveToFoundation(firstId) || cardSuit(firstId) !== targetIndex) return false;
+        } else if (targetPile === "tableau") {
+          if (!canMoveToTableau(firstId, targetIndex)) return false;
+        } else {
+          return false;
+        }
+        saveHistory();
+        queueCardAnimations(sel.ids, null, { pile: targetPile, index: targetIndex });
+        const moved = removeSelection(sel);
+        if (targetPile === "foundation") {
+          game.foundations[targetIndex].push(moved[0].id);
+          game.score += 10;
+        } else {
+          game.tableau[targetIndex].push(...moved.map((card) => ({ id: card.id, up: true })));
+        }
+        if (sel.pile === "tableau") revealTopIfNeeded(sel.pileIndex);
+        game.moves += 1;
+        clearSelection();
+        afterMove();
+        return true;
+      }
+
+      function drawStock() {
+        if (game.won || autoSolving) return;
+        if (!game.stock.length && !game.waste.length) return;
+        saveHistory();
+        if (game.stock.length) {
+          const id = game.stock[0];
+        queueCardAnimations([id], pileRect("stock"), { pile: "waste", index: 0 });
+          game.waste.push(game.stock.shift());
+        } else {
+          game.stock = game.waste.slice();
+          game.waste = [];
+          game.score = Math.max(0, game.score - 20);
+        }
+        game.moves += 1;
+        clearSelection();
+        afterMove();
+      }
+
+      function afterMove() {
+        renderAnimated();
+        checkWin();
+        if (!game.won && allTableauCardsVisible()) {
+          queueAutoFinish();
+        }
+      }
+
+      function queueAutoFinish() {
+        if (autoSolving || game.won || !allTableauCardsVisible()) return;
+        clearTimeout(autoFinishTimer);
+        setMessage("All hidden cards are visible - finishing");
+        autoFinishTimer = setTimeout(() => {
+          autoFinishTimer = 0;
+          if (!game || game.won || autoSolving || !allTableauCardsVisible()) return;
+          autoSolveEndgame();
+        }, 120);
+      }
+
+      function checkWin() {
+        if (game.won) return;
+        const total = game.foundations.reduce((sum, pile) => sum + pile.length, 0);
+        if (total !== 52) return;
+        const finalElapsed = elapsedSeconds();
+        game.won = true;
+        game.elapsedBefore = finalElapsed;
+        stats.wins += 1;
+        saveStats();
+        render();
+        playWinAnimation();
+        winText.textContent = `Moves ${game.moves}, time ${formatTime(game.elapsedBefore)}, score ${game.score}.`;
+        syncDealModeButtons();
+        clearTimeout(winTimer);
+        winTimer = setTimeout(() => winModal.classList.add("open"), 1700);
+        setMessage("Game won");
+      }
+
+      function clearWinAnimation() {
+        celebration.classList.remove("running");
+        celebration.innerHTML = "";
+      }
+
+      function playWinAnimation() {
+        clearWinAnimation();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const cards = game.foundations.flat();
+        const fallbackStart = board.getBoundingClientRect();
+        const startRects = SUITS.map((_, suit) => {
+          const el = document.querySelector(`.foundation-pile[data-pile-index="${suit}"]`);
+          return el ? el.getBoundingClientRect() : fallbackStart;
+        });
+        cards.forEach((id, index) => {
+          const suit = cardSuit(id);
+          const rect = startRects[suit];
+          const el = document.createElement("div");
+          el.className = `celebration-card ${cardColor(id)}`;
+          el.textContent = cardLabel(id);
+          const startX = rect.left + rect.width * 0.14;
+          const startY = rect.top + rect.height * 0.1;
+          const lane = (index * 47) % Math.max(220, viewportWidth);
+          const targetX = Math.min(viewportWidth - 54, Math.max(8, lane));
+          const targetY = viewportHeight - 92 - ((index % 6) * 18);
+          const tx = targetX - startX;
+          const ty = targetY - startY;
+          const rot = ((index % 9) - 4) * 13;
+          el.style.left = `${startX}px`;
+          el.style.top = `${startY}px`;
+          el.style.setProperty("--tx", `${tx}px`);
+          el.style.setProperty("--ty", `${ty}px`);
+          el.style.setProperty("--tx-44", `${tx * 0.48}px`);
+          el.style.setProperty("--tx-72", `${tx * 0.78}px`);
+          el.style.setProperty("--tx-88", `${tx * 0.92}px`);
+          el.style.setProperty("--ty-72", `${ty - viewportHeight * 0.09}px`);
+          el.style.setProperty("--ty-88", `${ty - viewportHeight * 0.03}px`);
+          el.style.setProperty("--rot", `${rot}deg`);
+          el.style.setProperty("--rot-44", `${rot * 0.44}deg`);
+          el.style.setProperty("--rot-72", `${rot * 0.78}deg`);
+          el.style.setProperty("--rot-88", `${rot * 0.92}deg`);
+          el.style.setProperty("--delay", `${index * 12}ms`);
+          celebration.appendChild(el);
+        });
+        celebration.classList.add("running");
+        setTimeout(clearWinAnimation, 2600);
+      }
+
+      function targetFromPoint(x, y) {
+        const dragged = document.querySelectorAll(".dragging");
+        dragged.forEach((el) => { el.style.visibility = "hidden"; });
+        const elements = document.elementsFromPoint(x, y);
+        dragged.forEach((el) => { el.style.visibility = ""; });
+        for (const el of elements) {
+          const card = el.closest && el.closest(".card");
+          if (card && card.dataset.pile !== "stock" && card.dataset.pile !== "waste") {
+            return { pile: card.dataset.pile, index: Number(card.dataset.pileIndex || 0) };
+          }
+          const pile = el.closest && el.closest("[data-pile]");
+          if (pile) return { pile: pile.dataset.pile, index: Number(pile.dataset.pileIndex || 0) };
+        }
+        return null;
+      }
+
+      function handleTapCard(cardEl) {
+        if (autoSolving) return;
+        smartMoveFromElement(cardEl);
+      }
+
+      function handleTapPile(pileEl) {
+        if (autoSolving) return;
+        const pile = pileEl.dataset.pile;
+        const index = Number(pileEl.dataset.pileIndex || 0);
+        if (pile === "stock") {
+          drawStock();
+          return;
+        }
+        if (selected) {
+          tryMoveSelection(selected, pile, index);
+        }
+      }
+
+      function beginPointer(event) {
+        if (autoSolving) return;
+        if (event.button !== 0) return;
+        const cardEl = event.target.closest(".card");
+        const pileEl = event.target.closest("[data-pile]");
+        if (cardEl || pileEl) startTimer();
+        if (!cardEl && pileEl) {
+          pointer = { mode: "pile", pileEl, x: event.clientX, y: event.clientY };
+          return;
+        }
+        if (!cardEl) return;
+        if (cardEl.dataset.pile === "stock") {
+          pointer = { mode: "pile", pileEl: cardEl.closest("[data-pile]"), x: event.clientX, y: event.clientY };
+          return;
+        }
+        const sel = selectionFromCard(cardEl);
+        if (!sel) return;
+        const els = [];
+        if (sel.pile === "tableau") {
+          for (let i = sel.cardIndex; i < game.tableau[sel.pileIndex].length; i++) {
+            const el = document.querySelector(`.card[data-pile="tableau"][data-pile-index="${sel.pileIndex}"][data-card-index="${i}"]`);
+            if (el) els.push(el);
+          }
+        } else {
+          els.push(cardEl);
+        }
+        pointer = {
+          mode: "card",
+          sel,
+          els,
+          x: event.clientX,
+          y: event.clientY,
+          dragging: false
+        };
+        cardEl.setPointerCapture?.(event.pointerId);
+      }
+
+      function movePointer(event) {
+        if (!pointer || pointer.mode !== "card") return;
+        const dx = event.clientX - pointer.x;
+        const dy = event.clientY - pointer.y;
+        if (!pointer.dragging && Math.hypot(dx, dy) > 5) {
+          pointer.dragging = true;
+          pauseGenerator(true);
+          clearSelection();
+          pointer.els.forEach((el) => el.classList.add("dragging"));
+        }
+        if (pointer.dragging) {
+          event.preventDefault();
+          pointer.els.forEach((el) => {
+            el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+          });
+        }
+      }
+
+      function endPointer(event) {
+        if (!pointer) return;
+        if (pointer.mode === "pile") {
+          const pileEl = pointer.pileEl;
+          const moved = Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 6;
+          pointer = null;
+          if (!moved && pileEl) handleTapPile(pileEl);
+          return;
+        }
+        const wasDragging = pointer.dragging;
+        const sel = pointer.sel;
+        if (wasDragging) {
+          const target = targetFromPoint(event.clientX, event.clientY);
+          if (target && tryMoveSelection(sel, target.pile, target.index)) {
+            pointer = null;
+            pauseGenerator(false);
+            return;
+          }
+        }
+        pointer.els.forEach((el) => {
+          el.classList.remove("dragging");
+          el.style.transform = "";
+        });
+        pointer = null;
+        pauseGenerator(false);
+        if (wasDragging) {
+          render();
+          return;
+        }
+        const cardEl = event.target.closest(".card");
+        if (cardEl) handleTapCard(cardEl);
+      }
+
+      function findTableauTarget(sel) {
+        const firstId = sel.ids[0];
+        const candidates = [];
+        for (let target = 0; target < 7; target++) {
+          if (sel.pile === "tableau" && target === sel.pileIndex) continue;
+          if (!canMoveToTableau(firstId, target)) continue;
+          const targetPile = game.tableau[target];
+          const sourcePile = sel.pile === "tableau" ? game.tableau[sel.pileIndex] : null;
+          const revealsCard = !!(sourcePile && sel.cardIndex > 0 && !sourcePile[sel.cardIndex - 1].up);
+          const movesWholeColumn = !!(sourcePile && sel.cardIndex === 0);
+          if (!targetPile.length && movesWholeColumn) continue;
+          candidates.push({
+            target,
+            score: (revealsCard ? 12 : 0) + (targetPile.length ? 4 : 0) + (sel.pile === "waste" ? 2 : 0)
+          });
+        }
+        candidates.sort((a, b) => b.score - a.score || a.target - b.target);
+        return candidates[0]?.target ?? null;
+      }
+
+      function moveCardToFoundationFromElement(cardEl) {
+        const sel = selectionFromCard(cardEl);
+        if (!sel || sel.ids.length !== 1) return;
+        const suit = cardSuit(sel.ids[0]);
+        if (tryMoveSelection(sel, "foundation", suit)) setMessage(`Moved ${cardLabel(sel.ids[0])}`);
+      }
+
+      function smartMoveFromElement(cardEl) {
+        if (autoSolving) return;
+        const sel = selectionFromCard(cardEl);
+        if (!sel) return;
+        if (sel.ids.length === 1) {
+          const suit = cardSuit(sel.ids[0]);
+          if (tryMoveSelection(sel, "foundation", suit)) {
+            setMessage(`Moved ${cardLabel(sel.ids[0])} to foundation`);
+            return;
+          }
+        }
+        const target = findTableauTarget(sel);
+        if (target !== null && tryMoveSelection(sel, "tableau", target)) {
+          setMessage(`Moved ${cardLabel(sel.ids[0])} to stack`);
+          return;
+        }
+        setMessage(`No automatic move for ${cardLabel(sel.ids[0])}`);
+      }
+
+      function findHint() {
+        if (game.waste.length) {
+          const id = game.waste[game.waste.length - 1];
+          if (canMoveToFoundation(id)) {
+            return { from: { pile: "waste", index: 0 }, to: { pile: "foundation", index: cardSuit(id) }, text: `Move ${cardLabel(id)} to foundation` };
+          }
+          for (let target = 0; target < 7; target++) {
+            if (canMoveToTableau(id, target)) return { from: { pile: "waste", index: 0 }, to: { pile: "tableau", index: target }, text: `Move ${cardLabel(id)} to tableau` };
+          }
+        }
+        for (let col = 0; col < 7; col++) {
+          const top = topTableauCard(col);
+          if (top && top.up && canMoveToFoundation(top.id)) {
+            return { from: { pile: "tableau", index: col }, to: { pile: "foundation", index: cardSuit(top.id) }, text: `Move ${cardLabel(top.id)} to foundation` };
+          }
+        }
+        for (let src = 0; src < 7; src++) {
+          const pile = game.tableau[src];
+          for (let cardIndex = 0; cardIndex < pile.length; cardIndex++) {
+            if (!validTableauStack(pile, cardIndex)) continue;
+            const id = pile[cardIndex].id;
+            for (let target = 0; target < 7; target++) {
+              if (target !== src && canMoveToTableau(id, target)) {
+                return { from: { pile: "tableau", index: src, cardIndex }, to: { pile: "tableau", index: target }, text: `Move ${cardLabel(id)} stack` };
+              }
+            }
+          }
+        }
+        if (game.stock.length || game.waste.length) return { text: "Draw from the stock" };
+        return { text: "No obvious move" };
+      }
+
+      function showHint() {
+        if (autoSolving) return;
+        const hint = findHint();
+        setMessage(hint.text);
+        document.querySelectorAll(".hinted").forEach((el) => el.classList.remove("hinted"));
+        if (hint.from) {
+          const selector = hint.from.pile === "tableau"
+            ? `.card[data-pile="tableau"][data-pile-index="${hint.from.index}"][data-card-index="${hint.from.cardIndex ?? game.tableau[hint.from.index].length - 1}"]`
+            : `.card[data-pile="${hint.from.pile}"]`;
+          document.querySelector(selector)?.classList.add("hinted");
+        }
+        if (hint.to) {
+          const target = hint.to.pile === "foundation"
+            ? `.foundation-pile[data-pile-index="${hint.to.index}"] .slot`
+            : `.tableau-col[data-pile-index="${hint.to.index}"] .slot`;
+          document.querySelector(target)?.classList.add("hinted");
+        }
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(() => {
+          document.querySelectorAll(".hinted").forEach((el) => el.classList.remove("hinted"));
+        }, 1600);
+      }
+
+      function moveWasteTopToFoundationDirect() {
+        if (!game.waste.length) return false;
+        const id = game.waste[game.waste.length - 1];
+        if (!canMoveToFoundation(id)) return false;
+        queueCardAnimations([id], null, { pile: "foundation", index: cardSuit(id) });
+        game.waste.pop();
+        game.foundations[cardSuit(id)].push(id);
+        game.score += 10;
+        game.moves += 1;
+        return true;
+      }
+
+      function moveTableauTopToFoundationDirect(col) {
+        const top = topTableauCard(col);
+        if (!top || !top.up || !canMoveToFoundation(top.id)) return false;
+        queueCardAnimations([top.id], null, { pile: "foundation", index: cardSuit(top.id) });
+        game.tableau[col].pop();
+        game.foundations[cardSuit(top.id)].push(top.id);
+        game.score += 10;
+        game.moves += 1;
+        return true;
+      }
+
+      function moveReadyFoundationCardsDirect() {
+        let moved = 0;
+        let didMove = true;
+        while (didMove && !game.won) {
+          didMove = false;
+          if (moveWasteTopToFoundationDirect()) {
+            moved += 1;
+            didMove = true;
+          }
+          for (let col = 0; col < 7; col++) {
+            if (moveTableauTopToFoundationDirect(col)) {
+              moved += 1;
+              didMove = true;
+            }
+          }
+        }
+        return moved;
+      }
+
+      function moveNextTalonCardToFoundationDirect() {
+        const talonSize = game.stock.length + game.waste.length;
+        if (!talonSize) return false;
+        let guard = talonSize + 3;
+        while (guard-- > 0 && (game.stock.length || game.waste.length)) {
+          if (moveWasteTopToFoundationDirect()) return true;
+          if (game.stock.length) {
+            const id = game.stock.shift();
+            const from = pileRect("stock");
+            game.moves += 1;
+            if (canMoveToFoundation(id)) {
+              queueCardAnimations([id], from, { pile: "foundation", index: cardSuit(id) });
+              game.foundations[cardSuit(id)].push(id);
+              game.score += 10;
+              game.moves += 1;
+              return true;
+            }
+            game.waste.push(id);
+            continue;
+          }
+          game.stock = game.waste.slice();
+          game.waste = [];
+          game.score = Math.max(0, game.score - 20);
+          game.moves += 1;
+        }
+        return false;
+      }
+
+      function stepRevealedSolver() {
+        if (moveReadyFoundationCardsDirect()) return true;
+        if (moveNextTalonCardToFoundationDirect()) return true;
+        return false;
+      }
+
+      async function autoSolveEndgame() {
+        if (autoSolving || game.won) return;
+        if (!allTableauCardsVisible()) {
+          setMessage("Auto finish unlocks when all hidden cards are visible");
+          return;
+        }
+        clearTimeout(autoFinishTimer);
+        autoSolving = true;
+        const token = ++autoSolveToken;
+        saveHistory();
+        clearSelection();
+        setMessage("Finishing the revealed game");
+        render();
+        let guard = 0;
+        while (token === autoSolveToken && !game.won && guard < 420) {
+          guard += 1;
+          if (!stepRevealedSolver()) break;
+          renderAnimated();
+          checkWin();
+          if (!game.won) await sleep(12);
+        }
+        if (token !== autoSolveToken) return;
+        autoSolving = false;
+        if (!game.won && guard >= 420) setMessage("Auto solver stopped after too many steps");
+        else if (!game.won) setMessage("Auto solver could not find the next move");
+        render();
+      }
+
+      function autoMove() {
+        if (game.won || autoSolving) return;
+        if (allTableauCardsVisible()) {
+          autoSolveEndgame();
+          return;
+        }
+        let moved = 0;
+        saveHistory();
+        while (true) {
+          let didMove = false;
+          if (game.waste.length) {
+            const id = game.waste[game.waste.length - 1];
+            if (canMoveToFoundation(id)) {
+              queueCardAnimations([id], null, { pile: "foundation", index: cardSuit(id) });
+              game.waste.pop();
+              game.foundations[cardSuit(id)].push(id);
+              game.score += 10;
+              moved++;
+              didMove = true;
+            }
+          }
+          for (let col = 0; col < 7; col++) {
+            const top = topTableauCard(col);
+            if (top && top.up && canMoveToFoundation(top.id)) {
+              queueCardAnimations([top.id], null, { pile: "foundation", index: cardSuit(top.id) });
+              game.tableau[col].pop();
+              game.foundations[cardSuit(top.id)].push(top.id);
+              game.score += 10;
+              revealTopIfNeeded(col);
+              moved++;
+              didMove = true;
+            }
+          }
+          if (!didMove) break;
+        }
+        if (!moved) {
+          game.history.pop();
+          setMessage("No safe auto move");
+          return;
+        }
+        game.moves += moved;
+        clearSelection();
+        setMessage(`Auto moved ${moved}`);
+        afterMove();
+      }
+
+      function undo() {
+        if (autoSolving) return;
+        if (!game.history.length) return;
+        clearTimeout(autoFinishTimer);
+        const moveCount = game.moves;
+        const prior = game.history.pop();
+        const remainingHistory = game.history.slice();
+        game = cloneGame(prior);
+        game.history = remainingHistory;
+        game.startedAt = Date.now();
+        game.moves = moveCount + 1;
+        game.score = Math.max(0, game.score - 2);
+        clearSelection();
+        render();
+        setMessage("Undone");
+      }
+
+      function syncGenerator() {
+        if (!generator) return;
+        generator.postMessage({
+          type: "sync",
+          counts: bankCounts(),
+          seen: allBankSeeds().concat(game && Number.isFinite(game.deal.seed) ? [game.deal.seed] : [])
+        });
+      }
+
+      function pauseGenerator(paused) {
+        if (generator) generator.postMessage({ type: "pause", paused });
+      }
+
+      function startGenerator() {
+        if (!window.Worker) return;
+        const blob = new Blob([workerCode()], { type: "text/javascript" });
+        generator = new Worker(URL.createObjectURL(blob));
+        generator.onmessage = (event) => {
+          if (event.data.type === "deal") addDealToBank(event.data.deal);
+          if (event.data.type === "status" && event.data.message) setMessage(event.data.message);
+        };
+        syncGenerator();
+      }
+
+      function workerCode() {
+        return `
+          const MAX_BANK = ${MAX_BANK};
+          let counts = { easy: 0, medium: 0, hard: 0 };
+          let seen = new Set();
+          let paused = false;
+          let requestedMode = null;
+          let backgroundMissStreak = 0;
+          const BACKGROUND_SOLVE_BUDGET = { softMs: 42, hardMs: 180, minNodes: 2600, nodeLimit: 36000 };
+          const REQUEST_SOLVE_BUDGET = { softMs: 72, hardMs: 320, minNodes: 4200, nodeLimit: 54000 };
+          const SUITS = [0, 1, 2, 3];
+          onmessage = (event) => {
+            if (event.data.type === "sync") {
+              counts = event.data.counts || counts;
+              seen = new Set(event.data.seen || []);
+            }
+            if (event.data.type === "pause") paused = !!event.data.paused;
+            if (event.data.type === "request") {
+              requestedMode = event.data.mode || "easy";
+              paused = false;
+            }
+          };
+
+          function rank(id) { return id % 13 + 1; }
+          function suit(id) { return Math.floor(id / 13); }
+          function color(id) { const s = suit(id); return s === 1 || s === 2 ? 1 : 0; }
+          function alternating(a, b) { return color(a) !== color(b); }
+          function rng(seed) {
+            let t = seed >>> 0;
+            return () => {
+              t += 0x6D2B79F5;
+              let x = t;
+              x = Math.imul(x ^ (x >>> 15), x | 1);
+              x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+              return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+            };
+          }
+          function randomSeed() {
+            const a = new Uint32Array(1);
+            crypto.getRandomValues(a);
+            return a[0] >>> 0;
+          }
+          function shuffle(seed) {
+            const deck = Array.from({ length: 52 }, (_, i) => i);
+            const rand = rng(seed);
+            for (let i = deck.length - 1; i > 0; i--) {
+              const j = Math.floor(rand() * (i + 1));
+              const tmp = deck[i];
+              deck[i] = deck[j];
+              deck[j] = tmp;
+            }
+            return deck;
+          }
+          function deal(seed) {
+            const deck = shuffle(seed);
+            const tableau = Array.from({ length: 7 }, () => []);
+            let n = 0;
+            for (let col = 0; col < 7; col++) {
+              for (let row = 0; row <= col; row++) {
+                tableau[col].push({ id: deck[n++], up: row === col });
+              }
+            }
+            return { tableau, foundations: [0,0,0,0], stock: deck.slice(n), waste: [] };
+          }
+          function clone(s) {
+            return {
+              tableau: s.tableau.map((p) => p.map((c) => ({ id: c.id, up: c.up }))),
+              foundations: s.foundations.slice(),
+              stock: s.stock.slice(),
+              waste: s.waste.slice()
+            };
+          }
+          function key(s) {
+            let out = s.foundations.join(",") + "|" + s.stock.join(",") + "|" + s.waste.join(",");
+            for (let i = 0; i < 7; i++) out += "|" + s.tableau[i].map((c) => c.id + (c.up ? "u" : "d")).join(",");
+            return out;
+          }
+          function won(s) {
+            return s.foundations[0] + s.foundations[1] + s.foundations[2] + s.foundations[3] === 52;
+          }
+          function canFoundation(s, id) {
+            return s.foundations[suit(id)] === rank(id) - 1;
+          }
+          function canTableau(s, id, target) {
+            const pile = s.tableau[target];
+            if (!pile.length) return rank(id) === 13;
+            const top = pile[pile.length - 1];
+            return top.up && alternating(id, top.id) && rank(id) + 1 === rank(top.id);
+          }
+          function validStack(pile, index) {
+            if (!pile[index] || !pile[index].up) return false;
+            for (let i = index; i < pile.length - 1; i++) {
+              if (!pile[i].up || !pile[i + 1].up) return false;
+              if (!alternating(pile[i].id, pile[i + 1].id)) return false;
+              if (rank(pile[i].id) !== rank(pile[i + 1].id) + 1) return false;
+            }
+            return true;
+          }
+          function reveal(s, col) {
+            const pile = s.tableau[col];
+            if (pile.length && !pile[pile.length - 1].up) {
+              pile[pile.length - 1].up = true;
+              return 1;
+            }
+            return 0;
+          }
+          function applyMove(s, move) {
+            const next = clone(s);
+            const metrics = { reveals: 0, draws: 0, resets: 0 };
+            if (move.kind === "draw") {
+              next.waste.push(next.stock.shift());
+              metrics.draws = 1;
+              return { state: next, metrics };
+            }
+            if (move.kind === "reset") {
+              next.stock = next.waste.slice();
+              next.waste = [];
+              metrics.resets = 1;
+              return { state: next, metrics };
+            }
+            let cards = [];
+            if (move.from === "waste") {
+              cards = [{ id: next.waste.pop(), up: true }];
+            } else {
+              cards = next.tableau[move.src].splice(move.index);
+              metrics.reveals += reveal(next, move.src);
+            }
+            if (move.to === "foundation") {
+              next.foundations[suit(cards[0].id)] += 1;
+            } else {
+              next.tableau[move.dest].push(...cards.map((c) => ({ id: c.id, up: true })));
+            }
+            return { state: next, metrics };
+          }
+          function generateMoves(s) {
+            const moves = [];
+            const wasteTop = s.waste.length ? s.waste[s.waste.length - 1] : null;
+            if (wasteTop !== null && canFoundation(s, wasteTop)) {
+              moves.push({ kind: "move", from: "waste", to: "foundation", priority: 0 });
+            }
+            for (let src = 0; src < 7; src++) {
+              const pile = s.tableau[src];
+              if (!pile.length) continue;
+              const top = pile[pile.length - 1];
+              if (top.up && canFoundation(s, top.id)) {
+                moves.push({ kind: "move", from: "tableau", src, index: pile.length - 1, to: "foundation", priority: 1 });
+              }
+            }
+            for (let src = 0; src < 7; src++) {
+              const pile = s.tableau[src];
+              for (let index = 0; index < pile.length; index++) {
+                if (!validStack(pile, index)) continue;
+                const id = pile[index].id;
+                for (let dest = 0; dest < 7; dest++) {
+                  if (dest === src || !canTableau(s, id, dest)) continue;
+                  const reveals = index > 0 && !pile[index - 1].up;
+                  const emptyDest = s.tableau[dest].length === 0;
+                  if (emptyDest && index === 0) continue;
+                  moves.push({ kind: "move", from: "tableau", src, index, to: "tableau", dest, priority: reveals ? 2 : emptyDest ? 4 : 6 });
+                }
+              }
+            }
+            if (wasteTop !== null) {
+              for (let dest = 0; dest < 7; dest++) {
+                if (canTableau(s, wasteTop, dest)) {
+                  moves.push({ kind: "move", from: "waste", to: "tableau", dest, priority: s.tableau[dest].length ? 3 : 5 });
+                }
+              }
+            }
+            if (s.stock.length) moves.push({ kind: "draw", priority: 7 });
+            else if (s.waste.length) moves.push({ kind: "reset", priority: 8 });
+            moves.sort((a, b) => b.priority - a.priority);
+            return moves;
+          }
+          function solve(initial, budget = BACKGROUND_SOLVE_BUDGET) {
+            const start = performance.now();
+            const softMs = budget.softMs;
+            const hardMs = budget.hardMs;
+            const minNodes = budget.minNodes;
+            const nodeLimit = budget.nodeLimit;
+            const stack = [{ state: initial, depth: 0, reveals: 0, draws: 0, resets: 0, branch: 0 }];
+            const visited = new Set();
+            let nodes = 0;
+            let maxBranch = 0;
+            while (stack.length && nodes < nodeLimit) {
+              const elapsed = performance.now() - start;
+              if (elapsed >= hardMs) break;
+              if (elapsed >= softMs && nodes >= minNodes) break;
+              const current = stack.pop();
+              const k = key(current.state);
+              if (visited.has(k)) continue;
+              visited.add(k);
+              nodes++;
+              if (won(current.state)) {
+                return {
+                  solved: true,
+                  nodes,
+                  depth: current.depth,
+                  reveals: current.reveals,
+                  draws: current.draws,
+                  resets: current.resets,
+                  maxBranch
+                };
+              }
+              const moves = generateMoves(current.state);
+              maxBranch = Math.max(maxBranch, moves.length);
+              for (const move of moves) {
+                const applied = applyMove(current.state, move);
+                stack.push({
+                  state: applied.state,
+                  depth: current.depth + 1,
+                  reveals: current.reveals + applied.metrics.reveals,
+                  draws: current.draws + applied.metrics.draws,
+                  resets: current.resets + applied.metrics.resets,
+                  branch: current.branch + moves.length
+                });
+              }
+            }
+            return { solved: false, nodes };
+          }
+          function difficultyProfile(metrics) {
+            const talonPressure = metrics.draws + metrics.resets * 28;
+            const searchPressure = metrics.nodes / 18 + Math.max(0, metrics.maxBranch - 6) * 22;
+            const depthPressure = Math.max(0, metrics.depth - 150) * 0.65;
+            const score = Math.round(talonPressure * 2.1 + searchPressure + depthPressure);
+            const friction =
+              (metrics.resets >= 3 ? 3 : metrics.resets >= 2 ? 2 : metrics.resets >= 1 ? 1 : 0) +
+              (metrics.draws >= 60 ? 3 : metrics.draws >= 48 ? 2 : metrics.draws >= 34 ? 1 : 0) +
+              (metrics.nodes >= 1200 ? 3 : metrics.nodes >= 650 ? 2 : metrics.nodes >= 350 ? 1 : 0) +
+              (metrics.maxBranch >= 10 ? 2 : metrics.maxBranch >= 8 ? 1 : 0);
+            return { score, friction };
+          }
+          function classify(metrics) {
+            const profile = difficultyProfile(metrics);
+            metrics.difficultyScore = profile.score;
+            metrics.friction = profile.friction;
+            const strongTalon = metrics.resets >= 3 || metrics.draws >= 58;
+            const strongSearch = metrics.nodes >= 1200 || metrics.depth >= 520;
+            if (
+              profile.score >= 360 &&
+              profile.friction >= 7 &&
+              (strongTalon || strongSearch || metrics.maxBranch >= 10)
+            ) {
+              return "Hard";
+            }
+            if (
+              profile.score >= 460 &&
+              profile.friction >= 6 &&
+              strongSearch
+            ) {
+              return "Hard";
+            }
+            if (profile.score >= 155 && profile.friction >= 3) return "Medium";
+            return "Easy";
+          }
+          function full() {
+            return counts.easy >= MAX_BANK && counts.medium >= MAX_BANK && counts.hard >= MAX_BANK;
+          }
+          function matchesMode(difficulty, mode) {
+            if (!mode) return false;
+            return difficulty.toLowerCase() === mode;
+          }
+          function tick() {
+            const activeRequest = requestedMode;
+            if (paused || (!activeRequest && full())) {
+              setTimeout(tick, 1400);
+              return;
+            }
+            const started = performance.now();
+            let attempts = 0;
+            const budgetMs = activeRequest ? 150 : 38;
+            const maxAttempts = activeRequest ? 24 : 6;
+            let foundDeal = false;
+            while (performance.now() - started < budgetMs && attempts < maxAttempts) {
+              attempts++;
+              const seed = randomSeed();
+              if (seen.has(seed)) continue;
+              seen.add(seed);
+              const result = solve(deal(seed), activeRequest ? REQUEST_SOLVE_BUDGET : BACKGROUND_SOLVE_BUDGET);
+              if (!result.solved) continue;
+              const difficulty = classify(result);
+              const key = difficulty.toLowerCase();
+              const requested = activeRequest && matchesMode(difficulty, activeRequest);
+              foundDeal = true;
+              if (requested) {
+                requestedMode = null;
+                backgroundMissStreak = 0;
+                postMessage({ type: "deal", requested: true, deal: { seed, difficulty, metrics: result } });
+                break;
+              }
+              if (counts[key] >= MAX_BANK) continue;
+              counts[key] += 1;
+              backgroundMissStreak = 0;
+              postMessage({ type: "deal", deal: { seed, difficulty, metrics: result } });
+              if (!activeRequest) break;
+            }
+            if (!activeRequest && !foundDeal) backgroundMissStreak = Math.min(8, backgroundMissStreak + 1);
+            const missBackoff = activeRequest ? 0 : backgroundMissStreak * 450;
+            setTimeout(tick, requestedMode ? 100 : 900 + missBackoff + Math.floor(Math.random() * 900));
+          }
+          tick();
+        `;
+      }
+
+      board.addEventListener("pointerdown", beginPointer);
+      board.addEventListener("pointermove", movePointer);
+      board.addEventListener("pointerup", endPointer);
+      board.addEventListener("pointercancel", () => {
+        if (pointer && pointer.els) {
+          pointer.els.forEach((el) => {
+            el.classList.remove("dragging");
+            el.style.transform = "";
+          });
+        }
+        pointer = null;
+        pauseGenerator(false);
+      });
+      board.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+      });
+      board.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        startTimer();
+        const cardEl = event.target.closest(".card");
+        const pileEl = event.target.closest("[data-pile]");
+        if (pileEl && (pileEl.dataset.pile === "stock" || pileEl.dataset.pile === "waste")) {
+          autoMove();
+          return;
+        }
+        if (cardEl) smartMoveFromElement(cardEl);
+        else autoMove();
+      });
+      boardWrap.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      });
+      dealModeButtons.forEach((button) => {
+        button.addEventListener("click", () => setDealMode(button.dataset.dealMode));
+      });
+      winDealModeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const mode = button.dataset.winDealMode;
+          setDealMode(mode);
+          winModal.classList.remove("open");
+          newGame(mode);
+        });
+      });
+      newGameBtn.addEventListener("click", () => newGame());
+      newWinGame.addEventListener("click", () => newGame(currentGameDealMode()));
+      restartBtn.addEventListener("click", restartGame);
+      undoBtn.addEventListener("click", undo);
+      hintBtn.addEventListener("click", showHint);
+      closeWin.addEventListener("click", () => winModal.classList.remove("open"));
+      document.addEventListener("visibilitychange", () => pauseGenerator(document.hidden));
+      window.addEventListener("resize", () => render());
+      setInterval(() => {
+        if (game && !game.won) timeEl.textContent = formatTime(elapsedSeconds());
+      }, 1000);
+
+      renderBank();
+      startInitialGame();
+      startGenerator();
+      sleep(0).then(syncGenerator);
+    })();
+  </script>
+</body>
+</html>
