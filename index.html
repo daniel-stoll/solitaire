@@ -3,20 +3,69 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <title>Solitaire</title>
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("singleFileSolitaire.theme.v1");
+        document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
   <style>
     :root {
       color-scheme: light;
       --felt: #0f7d3f;
       --felt-dark: #075c2d;
       --felt-light: #1b9b55;
+      --xp-blue-hi: #2f74df;
       --xp-blue: #1f5fbf;
       --xp-blue-dark: #17478d;
+      --xp-blue-border: #092e72;
+      --title-shadow: #08306d;
       --chrome: #d7d3c8;
       --chrome-hi: #f7f5ee;
       --chrome-shadow: #827e73;
+      --button-text: #111;
+      --button-disabled: #777;
+      --active-border: #4e668f;
+      --active-hi: #fff8cf;
+      --active: #ffd84a;
+      --active-shadow: #b49724;
+      --status-hi: #e8e5dc;
+      --status: #c5c0b5;
+      --panel-bg: #ece9d8;
+      --panel-text: #111;
+      --badge-bg: #efede6;
+      --badge-border: #8a867b;
+      --badge-shadow: #aaa397;
+      --message-text: #202020;
+      --modal-shade: rgba(0,0,0,.24);
       --ink: #171717;
       --muted: #4b4b4b;
+      --card-face: #f8f8f4;
+      --card-face-end: #f8f8f4;
+      --card-ink: #171717;
+      --card-red: #c51e25;
+      --card-border: #1b1b1b;
+      --card-shadow: 1px 2px 2px rgba(0,0,0,.32);
+      --card-back-top: #134aa0;
+      --card-back-bottom: #0a2e70;
+      --card-back-border: #f4f4f4;
+      --card-back-ring: #154eb0;
+      --card-back-pattern: rgba(255,255,255,.18);
+      --card-back-center: rgba(11,47,120,.38);
+      --card-back-center-glow: rgba(255,255,255,.28);
+      --card-back-center-border: rgba(255,255,255,.86);
+      --court-black-mantle: #315d9c;
+      --court-red-mantle: #b92b39;
+      --court-ink-base: #242633;
+      --court-skin-base: #f2d0a9;
+      --court-hair-base: #2b261f;
+      --court-shadow-base: rgba(36,38,51,.14);
       --card-w: clamp(44px, 11.4vw, 92px);
       --card-h: calc(var(--card-w) * 1.4);
       --gap: clamp(6px, 1.4vw, 12px);
@@ -27,6 +76,57 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       font-family: Tahoma, Verdana, Segoe UI, Arial, sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --felt: #073923;
+      --felt-dark: #021811;
+      --felt-light: #0d5f36;
+      --xp-blue-hi: #233b68;
+      --xp-blue: #172947;
+      --xp-blue-dark: #0c1729;
+      --xp-blue-border: #050913;
+      --title-shadow: #03060c;
+      --chrome: #2b2f37;
+      --chrome-hi: #525865;
+      --chrome-shadow: #11141a;
+      --button-text: #f2f4f8;
+      --button-disabled: #9499a3;
+      --active-border: #607b9e;
+      --active-hi: #f6d45a;
+      --active: #b98518;
+      --active-shadow: #5d430c;
+      --status-hi: #343941;
+      --status: #20242b;
+      --panel-bg: #252932;
+      --panel-text: #f2f4f8;
+      --badge-bg: #303640;
+      --badge-border: #656d79;
+      --badge-shadow: #15181d;
+      --message-text: #f0f2f5;
+      --modal-shade: rgba(0,0,0,.56);
+      --muted: #b9bec7;
+      --card-face: #fffdf8;
+      --card-face-end: #f0eee6;
+      --card-ink: #121212;
+      --card-red: #b91520;
+      --card-border: #101010;
+      --card-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 0 0 1px rgba(255,255,255,.22), 1px 3px 5px rgba(0,0,0,.46);
+      --card-back-top: #1856b8;
+      --card-back-bottom: #08275f;
+      --card-back-border: #fffaf0;
+      --card-back-ring: #1858ba;
+      --card-back-pattern: rgba(255,255,255,.22);
+      --card-back-center: rgba(9,42,108,.42);
+      --card-back-center-glow: rgba(255,255,255,.34);
+      --card-back-center-border: rgba(255,255,255,.92);
+      --court-black-mantle: #28558f;
+      --court-red-mantle: #a92332;
+      --court-ink-base: #20222b;
+      --court-skin-base: #f0cba5;
+      --court-hair-base: #29231d;
+      --court-shadow-base: rgba(32,34,43,.12);
     }
 
     * {
@@ -63,8 +163,8 @@
 
     .titlebar {
       padding-top: var(--safe-top);
-      background: linear-gradient(#2f74df, var(--xp-blue) 48%, var(--xp-blue-dark));
-      border-bottom: 1px solid #092e72;
+      background: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 48%, var(--xp-blue-dark));
+      border-bottom: 1px solid var(--xp-blue-border);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.42);
     }
 
@@ -83,21 +183,8 @@
       gap: 7px;
       min-width: 112px;
       font-weight: 700;
-      text-shadow: 0 1px #08306d;
+      text-shadow: 0 1px var(--title-shadow);
       margin-right: 4px;
-    }
-
-    .brand-mark {
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      background: #f8f8f8;
-      color: #d21f28;
-      display: grid;
-      place-items: center;
-      box-shadow: 1px 1px 0 rgba(0,0,0,.36);
-      font-size: 15px;
-      line-height: 1;
     }
 
     .toolbar {
@@ -108,6 +195,13 @@
       flex: 1;
     }
 
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
     button {
       height: 28px;
       border: 1px solid #6d695e;
@@ -115,7 +209,7 @@
       border-left-color: #fff;
       border-radius: 3px;
       background: linear-gradient(var(--chrome-hi), var(--chrome));
-      color: #111;
+      color: var(--button-text);
       box-shadow: inset -1px -1px 0 var(--chrome-shadow);
       font: 12px Tahoma, Verdana, Arial, sans-serif;
       padding: 0 9px;
@@ -135,7 +229,7 @@
     }
 
     button:disabled {
-      color: #777;
+      color: var(--button-disabled);
       cursor: default;
       opacity: .72;
     }
@@ -154,16 +248,26 @@
 
     .deal-mode.active,
     .deal-mode[aria-pressed="true"] {
-      border: 1px solid #4e668f;
+      border: 1px solid var(--active-border);
       border-right-color: #fff;
       border-bottom-color: #fff;
-      background: linear-gradient(#fff8cf, #ffd84a);
-      box-shadow: inset 1px 1px 0 #b49724;
+      background: linear-gradient(var(--active-hi), var(--active));
+      box-shadow: inset 1px 1px 0 var(--active-shadow);
       font-weight: 700;
     }
 
     .toolbar-separator {
       margin-left: 8px;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+      width: 34px;
+      min-width: 34px;
+      padding: 0;
+      white-space: nowrap;
+      font-size: 17px;
+      line-height: 1;
     }
 
     .board-wrap {
@@ -244,36 +348,39 @@
       width: var(--card-w);
       height: var(--card-h);
       border-radius: var(--radius);
-      background: #f8f8f4;
-      border: 1px solid #1b1b1b;
-      box-shadow: 1px 2px 2px rgba(0,0,0,.32);
-      color: var(--ink);
+      background-color: var(--card-face);
+      background: linear-gradient(var(--card-face), var(--card-face-end));
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      color: var(--card-ink);
+      color-scheme: only light;
       cursor: pointer;
       touch-action: none;
       overflow: hidden;
       transform: translate3d(0,0,0);
       transition: box-shadow .08s ease, filter .08s ease;
-      --court-ink: #242633;
-      --court-skin: #f2d0a9;
-      --court-hair: #2b261f;
-      --court-mantle: #315d9c;
+      --court-ink: var(--court-ink-base);
+      --court-skin: var(--court-skin-base);
+      --court-hair: var(--court-hair-base);
+      --court-mantle: var(--court-black-mantle);
       --court-suit: currentColor;
-      --court-shadow: rgba(36,38,51,.14);
+      --court-shadow: var(--court-shadow-base);
     }
 
     .card.red {
-      color: #c51e25;
-      --court-mantle: #b92b39;
-      --court-suit: #c51e25;
+      color: var(--card-red);
+      --court-mantle: var(--court-red-mantle);
+      --court-suit: var(--card-red);
     }
 
     .card.face-down {
+      background-color: var(--card-back-bottom);
       background:
-        linear-gradient(45deg, rgba(255,255,255,.18) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%),
-        linear-gradient(#134aa0, #0a2e70);
+        linear-gradient(45deg, var(--card-back-pattern) 25%, transparent 25%, transparent 50%, var(--card-back-pattern) 50%, var(--card-back-pattern) 75%, transparent 75%),
+        linear-gradient(var(--card-back-top), var(--card-back-bottom));
       background-size: 11px 11px, auto;
-      border: 2px solid #f4f4f4;
-      box-shadow: inset 0 0 0 3px #154eb0, inset 0 0 0 6px #f4f4f4, 1px 2px 2px rgba(0,0,0,.32);
+      border: 2px solid var(--card-back-border);
+      box-shadow: inset 0 0 0 3px var(--card-back-ring), inset 0 0 0 6px var(--card-back-border), var(--card-shadow);
       cursor: default;
     }
 
@@ -281,11 +388,11 @@
       content: "";
       position: absolute;
       inset: 18%;
-      border: 2px solid rgba(255,255,255,.86);
+      border: 2px solid var(--card-back-center-border);
       border-radius: 5px;
       background:
-        radial-gradient(circle at center, rgba(255,255,255,.28), transparent 45%),
-        rgba(11,47,120,.38);
+        radial-gradient(circle at center, var(--card-back-center-glow), transparent 45%),
+        var(--card-back-center);
     }
 
     .corner {
@@ -601,9 +708,9 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      background: linear-gradient(#e8e5dc, #c5c0b5);
+      background: linear-gradient(var(--status-hi), var(--status));
       border-top: 1px solid #fff;
-      color: #111;
+      color: var(--panel-text);
       box-shadow: inset 0 1px 0 #fff;
       font-size: 12px;
     }
@@ -621,18 +728,18 @@
       display: inline-flex;
       align-items: center;
       padding: 2px 7px;
-      border: 1px solid #8a867b;
+      border: 1px solid var(--badge-border);
       border-top-color: #fff;
       border-left-color: #fff;
-      background: #efede6;
-      box-shadow: inset -1px -1px 0 #aaa397;
-      color: #111;
+      background: var(--badge-bg);
+      box-shadow: inset -1px -1px 0 var(--badge-shadow);
+      color: var(--panel-text);
       white-space: nowrap;
     }
 
     .message {
       min-width: min(360px, 82vw);
-      color: #202020;
+      color: var(--message-text);
     }
 
     .modal {
@@ -642,7 +749,7 @@
       align-items: center;
       justify-content: center;
       padding: 22px;
-      background: rgba(0,0,0,.24);
+      background: var(--modal-shade);
       z-index: 7000;
     }
 
@@ -652,18 +759,18 @@
 
     .dialog {
       width: min(360px, 100%);
-      border: 1px solid #0d347b;
-      background: #ece9d8;
-      color: #111;
+      border: 1px solid var(--xp-blue-border);
+      background: var(--panel-bg);
+      color: var(--panel-text);
       box-shadow: 4px 5px 0 rgba(0,0,0,.26);
     }
 
     .dialog-title {
       padding: 7px 9px;
-      background: linear-gradient(#2f74df, #1f5fbf 50%, #17478d);
+      background: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 50%, var(--xp-blue-dark));
       color: #fff;
       font-weight: 700;
-      text-shadow: 0 1px #062b68;
+      text-shadow: 0 1px var(--title-shadow);
     }
 
     .dialog-body {
@@ -731,8 +838,10 @@
         min-width: auto;
       }
 
-      .brand span:last-child {
-        display: none;
+      .theme-toggle {
+        order: 2;
+        width: 34px;
+        min-width: 34px;
       }
 
       button {
@@ -740,12 +849,34 @@
         padding: 0 7px;
       }
 
-      .deal-mode {
-        min-width: 52px;
+      .toolbar > .deal-modes .deal-mode {
+        min-width: 0;
       }
 
       .toolbar {
+        order: 3;
+        flex-basis: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .toolbar > .deal-modes,
+      .toolbar-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 4px;
+        width: 100%;
+      }
+
+      .toolbar > .deal-modes .deal-mode,
+      .toolbar-actions button {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .toolbar-separator {
+        margin-left: 0;
       }
 
       .statusbar {
@@ -757,6 +888,7 @@
         min-width: 0;
         order: 3;
       }
+
     }
 
     @media (max-height: 520px) and (orientation: landscape) {
@@ -787,7 +919,6 @@
     <header class="titlebar">
       <div class="titlebar-inner">
         <div class="brand" aria-label="Solitaire">
-          <span class="brand-mark">A</span>
           <span>Solitaire</span>
         </div>
         <div class="toolbar">
@@ -797,11 +928,14 @@
             <button class="deal-mode" type="button" data-deal-mode="hard" aria-pressed="false">Hard</button>
             <button class="deal-mode" type="button" data-deal-mode="random" aria-pressed="false">Random</button>
           </div>
-          <button id="newGame" class="toolbar-separator" title="Start a new deal">New</button>
-          <button id="restart" title="Restart this deal">Restart</button>
-          <button id="hint" title="Show a hint">Hint</button>
-          <button id="undo" class="toolbar-separator" title="Undo last move">Undo</button>
+          <div class="toolbar-actions">
+            <button id="newGame" class="toolbar-separator" title="Start a new deal">New</button>
+            <button id="restart" title="Restart this deal">Restart</button>
+            <button id="hint" title="Show a hint">Hint</button>
+            <button id="undo" class="toolbar-separator" title="Undo last move">Undo</button>
+          </div>
         </div>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" aria-live="polite">&#9790;</button>
       </div>
     </header>
 
@@ -889,6 +1023,7 @@
       const BANK_KEY = "singleFileSolitaire.bank.v2";
       const STATS_KEY = "singleFileSolitaire.stats.v1";
       const DEAL_MODE_KEY = "singleFileSolitaire.dealMode.v1";
+      const THEME_KEY = "singleFileSolitaire.theme.v1";
       const MAX_BANK = 3;
       const board = document.getElementById("board");
       const tableauEl = document.getElementById("tableau");
@@ -898,6 +1033,7 @@
       const restartBtn = document.getElementById("restart");
       const undoBtn = document.getElementById("undo");
       const hintBtn = document.getElementById("hint");
+      const themeToggle = document.getElementById("themeToggle");
       const movesEl = document.getElementById("moves");
       const timeEl = document.getElementById("time");
       const scoreEl = document.getElementById("score");
@@ -925,6 +1061,7 @@
       let autoSolving = false;
       let autoSolveToken = 0;
       let selectedDealMode = loadDealMode();
+      let selectedTheme = loadTheme();
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -1142,6 +1279,41 @@
         localStorage.setItem(DEAL_MODE_KEY, selectedDealMode);
       }
 
+      function normalizeTheme(theme) {
+        return theme === "dark" ? "dark" : "light";
+      }
+
+      function loadTheme() {
+        try {
+          return normalizeTheme(localStorage.getItem(THEME_KEY) || document.documentElement.dataset.theme);
+        } catch {
+          return normalizeTheme(document.documentElement.dataset.theme);
+        }
+      }
+
+      function saveTheme() {
+        try {
+          localStorage.setItem(THEME_KEY, selectedTheme);
+        } catch {
+          // Theme persistence is nice-to-have; the toggle still works for this page load.
+        }
+      }
+
+      function syncTheme() {
+        const nextTheme = selectedTheme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = selectedTheme;
+        themeToggle.textContent = nextTheme === "dark" ? "\u263e" : "\u2600";
+        themeToggle.title = `Switch to ${nextTheme} theme`;
+        themeToggle.setAttribute("aria-label", themeToggle.title);
+        themeToggle.setAttribute("aria-pressed", selectedTheme === "dark" ? "true" : "false");
+      }
+
+      function setTheme(theme) {
+        selectedTheme = normalizeTheme(theme);
+        syncTheme();
+        saveTheme();
+      }
+
       function syncDealModeButtons() {
         dealModeButtons.forEach((button) => {
           const active = button.dataset.dealMode === selectedDealMode;
@@ -1229,21 +1401,12 @@
       }
 
       function startInitialGame() {
-        if (selectedDealMode === "random") {
-          startGameFromDeal({
-            seed: randomSeed(),
-            difficulty: "Random",
-            type: "random"
-          });
-          return;
-        }
-        const deal = chooseBanked(selectedDealMode);
-        if (deal) {
-          saveBank();
-          startGameFromDeal({ ...deal, type: selectedDealMode });
-        } else {
-          startGameFromDeal(makeStarterDeal().deal);
-        }
+        setDealMode("random");
+        startGameFromDeal({
+          seed: randomSeed(),
+          difficulty: "Random",
+          type: "random"
+        });
       }
 
       function chooseBanked(mode) {
@@ -2595,6 +2758,9 @@
       restartBtn.addEventListener("click", restartGame);
       undoBtn.addEventListener("click", undo);
       hintBtn.addEventListener("click", showHint);
+      themeToggle.addEventListener("click", () => {
+        setTheme(selectedTheme === "dark" ? "light" : "dark");
+      });
       closeWin.addEventListener("click", () => winModal.classList.remove("open"));
       document.addEventListener("visibilitychange", () => pauseGenerator(document.hidden));
       window.addEventListener("resize", () => render());
@@ -2602,6 +2768,7 @@
         if (game && !game.won) timeEl.textContent = formatTime(elapsedSeconds());
       }, 1000);
 
+      syncTheme();
       renderBank();
       startInitialGame();
       startGenerator();
