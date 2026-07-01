@@ -241,13 +241,16 @@
       flex-wrap: wrap;
     }
 
-    .deal-mode {
+    .deal-mode,
+    .layout-mode {
       min-width: 58px;
       padding: 0 7px;
     }
 
     .deal-mode.active,
-    .deal-mode[aria-pressed="true"] {
+    .deal-mode[aria-pressed="true"],
+    .layout-mode.active,
+    .layout-mode[aria-pressed="true"] {
       border: 1px solid var(--active-border);
       border-right-color: #fff;
       border-bottom-color: #fff;
@@ -260,7 +263,7 @@
       margin-left: 8px;
     }
 
-    .theme-toggle {
+    .settings-toggle {
       margin-left: auto;
       width: 34px;
       min-width: 34px;
@@ -268,6 +271,44 @@
       white-space: nowrap;
       font-size: 17px;
       line-height: 1;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .settings-row .dialog-label {
+      font-weight: 700;
+    }
+
+    .settings-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .settings-options button {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .settings-note {
+      min-height: 15px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .theme-toggle {
+      min-width: 92px;
     }
 
     .board-wrap {
@@ -282,13 +323,17 @@
       min-height: 100%;
       margin: 0 auto;
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
 
     .top-row,
-    .tableau {
+    .tableau,
+    .bottom-row {
       display: grid;
       grid-template-columns: repeat(7, var(--card-w));
       gap: var(--gap);
+      flex-shrink: 0;
     }
 
     .top-row {
@@ -297,6 +342,46 @@
 
     .tableau {
       align-items: start;
+    }
+
+    .bottom-row {
+      display: none;
+      width: var(--board-w);
+      padding-top: clamp(10px, 2.8vh, 18px);
+      align-items: end;
+    }
+
+    :root[data-layout="performance"] .bottom-row {
+      display: grid;
+      margin-top: auto;
+    }
+
+    :root[data-layout="performance"] .bottom-row .stock-pile {
+      grid-column: 1;
+    }
+
+    :root[data-layout="performance"] .bottom-row .waste-pile {
+      grid-column: 7;
+    }
+
+    :root[data-layout="performance"] .top-row .spacer {
+      grid-column: 3;
+    }
+
+    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="0"] {
+      grid-column: 4;
+    }
+
+    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="1"] {
+      grid-column: 5;
+    }
+
+    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="2"] {
+      grid-column: 6;
+    }
+
+    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="3"] {
+      grid-column: 7;
     }
 
     .pile,
@@ -838,10 +923,19 @@
         min-width: auto;
       }
 
-      .theme-toggle {
+      .settings-toggle {
         order: 2;
         width: 34px;
         min-width: 34px;
+      }
+
+      .settings-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .theme-toggle {
+        width: 100%;
       }
 
       button {
@@ -935,7 +1029,7 @@
             <button id="undo" class="toolbar-separator" title="Undo last move">Undo</button>
           </div>
         </div>
-        <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" aria-live="polite">&#9790;</button>
+        <button id="settingsToggle" class="settings-toggle" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="settingsModal" aria-label="Open settings" title="Settings">&#9881;</button>
       </div>
     </header>
 
@@ -959,6 +1053,7 @@
           <div class="tableau-col" data-pile="tableau" data-pile-index="5"><div class="slot"></div></div>
           <div class="tableau-col" data-pile="tableau" data-pile-index="6"><div class="slot"></div></div>
         </div>
+        <div class="bottom-row" id="bottomRow"></div>
       </div>
     </section>
 
@@ -977,6 +1072,30 @@
   </main>
 
   <div class="celebration" id="celebration" aria-hidden="true"></div>
+
+  <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="dialog">
+      <div class="dialog-title" id="settingsTitle">Settings</div>
+      <div class="dialog-body">
+        <div class="settings-row">
+          <div class="dialog-label">Theme</div>
+          <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" aria-live="polite">Light</button>
+        </div>
+        <div class="settings-field">
+          <div class="dialog-label">Layout</div>
+          <div class="settings-options" id="layoutModes" aria-label="Layout">
+            <button class="layout-mode" type="button" data-layout-mode="default" aria-pressed="false">Default</button>
+            <button class="layout-mode" type="button" data-layout-mode="right" aria-pressed="false">Right</button>
+            <button class="layout-mode" type="button" data-layout-mode="performance" aria-pressed="false">Performance</button>
+          </div>
+          <div class="settings-note" id="layoutNote" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button id="closeSettings">Close</button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
     <div class="dialog">
@@ -1008,6 +1127,7 @@
       const SUIT_SYMBOLS = ["\u2660", "\u2665", "\u2666", "\u2663"];
       const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
       const DEAL_MODES = ["easy", "medium", "hard", "random"];
+      const LAYOUTS = ["default", "right", "performance"];
       const PIP_LAYOUTS = {
         1: [{ pos: "mc", large: true }],
         2: [{ pos: "tc" }, { pos: "bc", flip: true }],
@@ -1024,16 +1144,28 @@
       const STATS_KEY = "singleFileSolitaire.stats.v1";
       const DEAL_MODE_KEY = "singleFileSolitaire.dealMode.v1";
       const THEME_KEY = "singleFileSolitaire.theme.v1";
+      const LAYOUT_KEY = "singleFileSolitaire.layout.v1";
       const MAX_BANK = 3;
       const board = document.getElementById("board");
       const tableauEl = document.getElementById("tableau");
       const boardWrap = document.getElementById("boardWrap");
+      const topRowEl = document.getElementById("topRow");
+      const bottomRowEl = document.getElementById("bottomRow");
+      const stockPileEl = document.querySelector(".stock-pile");
+      const wastePileEl = document.querySelector(".waste-pile");
+      const spacerPileEl = document.querySelector(".spacer");
+      const foundationPileEls = [...document.querySelectorAll(".foundation-pile")];
       const dealModeButtons = [...document.querySelectorAll("[data-deal-mode]")];
+      const layoutModeButtons = [...document.querySelectorAll("[data-layout-mode]")];
       const newGameBtn = document.getElementById("newGame");
       const restartBtn = document.getElementById("restart");
       const undoBtn = document.getElementById("undo");
       const hintBtn = document.getElementById("hint");
+      const settingsToggle = document.getElementById("settingsToggle");
+      const settingsModal = document.getElementById("settingsModal");
       const themeToggle = document.getElementById("themeToggle");
+      const closeSettings = document.getElementById("closeSettings");
+      const layoutNote = document.getElementById("layoutNote");
       const movesEl = document.getElementById("moves");
       const timeEl = document.getElementById("time");
       const scoreEl = document.getElementById("score");
@@ -1062,6 +1194,7 @@
       let autoSolveToken = 0;
       let selectedDealMode = loadDealMode();
       let selectedTheme = loadTheme();
+      let selectedLayout = loadLayout();
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -1299,10 +1432,87 @@
         }
       }
 
+      function normalizeLayout(layout) {
+        return LAYOUTS.includes(layout) ? layout : "default";
+      }
+
+      function loadLayout() {
+        try {
+          return normalizeLayout(localStorage.getItem(LAYOUT_KEY));
+        } catch {
+          return "default";
+        }
+      }
+
+      function saveLayout() {
+        try {
+          localStorage.setItem(LAYOUT_KEY, selectedLayout);
+        } catch {
+          // Layout persistence is nice-to-have; the control still works for this page load.
+        }
+      }
+
+      function performanceLayoutAvailable() {
+        if (window.matchMedia) {
+          return window.matchMedia("(max-width: 560px) and (orientation: portrait)").matches;
+        }
+        return window.innerWidth <= 560 && window.innerHeight >= window.innerWidth;
+      }
+
+      function effectiveLayout() {
+        if (selectedLayout === "performance" && !performanceLayoutAvailable()) return "default";
+        return selectedLayout;
+      }
+
+      function arrangeLayout(layout) {
+        if (layout === "performance") {
+          topRowEl.append(spacerPileEl, ...foundationPileEls);
+          bottomRowEl.append(stockPileEl, wastePileEl);
+        } else if (layout === "right") {
+          topRowEl.append(...foundationPileEls, spacerPileEl, wastePileEl, stockPileEl);
+        } else {
+          topRowEl.append(stockPileEl, wastePileEl, spacerPileEl, ...foundationPileEls);
+        }
+      }
+
+      function syncLayoutButtons() {
+        const performanceAvailable = performanceLayoutAvailable();
+        layoutModeButtons.forEach((button) => {
+          const mode = button.dataset.layoutMode;
+          const active = mode === selectedLayout;
+          const disabled = mode === "performance" && !performanceAvailable;
+          button.classList.toggle("active", active);
+          button.disabled = disabled;
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        if (performanceAvailable) {
+          layoutNote.textContent = "";
+        } else if (selectedLayout === "performance") {
+          layoutNote.textContent = "Performance selected; showing Default until portrait mobile.";
+        } else {
+          layoutNote.textContent = "Performance is available on portrait mobile.";
+        }
+      }
+
+      function syncLayout() {
+        const layout = effectiveLayout();
+        document.documentElement.dataset.layout = layout;
+        board.dataset.layout = layout;
+        arrangeLayout(layout);
+        syncLayoutButtons();
+      }
+
+      function setLayout(layout) {
+        selectedLayout = normalizeLayout(layout);
+        saveLayout();
+        syncLayout();
+        render();
+      }
+
       function syncTheme() {
         const nextTheme = selectedTheme === "dark" ? "light" : "dark";
         document.documentElement.dataset.theme = selectedTheme;
-        themeToggle.textContent = nextTheme === "dark" ? "\u263e" : "\u2600";
+        themeToggle.textContent = selectedTheme === "dark" ? "Dark" : "Light";
         themeToggle.title = `Switch to ${nextTheme} theme`;
         themeToggle.setAttribute("aria-label", themeToggle.title);
         themeToggle.setAttribute("aria-pressed", selectedTheme === "dark" ? "true" : "false");
@@ -1312,6 +1522,18 @@
         selectedTheme = normalizeTheme(theme);
         syncTheme();
         saveTheme();
+      }
+
+      function openSettings() {
+        settingsModal.classList.add("open");
+        settingsToggle.setAttribute("aria-expanded", "true");
+        themeToggle.focus();
+      }
+
+      function closeSettingsModal() {
+        settingsModal.classList.remove("open");
+        settingsToggle.setAttribute("aria-expanded", "false");
+        settingsToggle.focus();
       }
 
       function syncDealModeButtons() {
@@ -1603,14 +1825,14 @@
         if (!game) return;
         clearTimeout(hintTimer);
         clearCards();
-        document.querySelector(".stock-pile .slot").style.opacity = game.stock.length ? "0" : "1";
+        syncLayout();
+        stockPileEl.querySelector(".slot").style.opacity = game.stock.length ? "0" : "1";
         if (game.stock.length) {
           const back = createCard({ id: 0, up: false }, "stock", 0, game.stock.length - 1, 0);
           back.dataset.pile = "stock";
-          document.querySelector(".stock-pile").appendChild(back);
+          stockPileEl.appendChild(back);
         }
         if (game.waste.length) {
-          const wastePileEl = document.querySelector(".waste-pile");
           const firstVisible = Math.max(0, game.waste.length - 2);
           for (let index = firstVisible; index < game.waste.length; index++) {
             const id = game.waste[index];
@@ -1747,8 +1969,12 @@
         const verticalPadding = parseFloat(wrapStyle.paddingTop) + parseFloat(wrapStyle.paddingBottom);
         const topRowGap = parseFloat(topRowStyle.marginBottom) || 0;
         const cardHeight = cssNumber("--card-h");
+        const bottomRowStyle = getComputedStyle(bottomRowEl);
+        const bottomRowSpace = effectiveLayout() === "performance"
+          ? cardHeight + (parseFloat(bottomRowStyle.paddingTop) || 0)
+          : 0;
         const fanSteps = Math.max(9, ...game.tableau.map((pile) => Math.max(0, pile.length - 1)));
-        const availableFanSpace = wrapBox.height - verticalPadding - cardHeight - topRowGap - cardHeight;
+        const availableFanSpace = wrapBox.height - verticalPadding - cardHeight - topRowGap - cardHeight - bottomRowSpace;
         if (fanSteps <= 0 || availableFanSpace <= 0) return Math.max(4, Math.min(baseFan, 4));
         return Math.max(4, Math.min(baseFan, availableFanSpace / fanSteps));
       }
@@ -2745,6 +2971,9 @@
       dealModeButtons.forEach((button) => {
         button.addEventListener("click", () => setDealMode(button.dataset.dealMode));
       });
+      layoutModeButtons.forEach((button) => {
+        button.addEventListener("click", () => setLayout(button.dataset.layoutMode));
+      });
       winDealModeButtons.forEach((button) => {
         button.addEventListener("click", () => {
           const mode = button.dataset.winDealMode;
@@ -2758,10 +2987,20 @@
       restartBtn.addEventListener("click", restartGame);
       undoBtn.addEventListener("click", undo);
       hintBtn.addEventListener("click", showHint);
+      settingsToggle.addEventListener("click", openSettings);
       themeToggle.addEventListener("click", () => {
         setTheme(selectedTheme === "dark" ? "light" : "dark");
       });
+      closeSettings.addEventListener("click", closeSettingsModal);
+      settingsModal.addEventListener("click", (event) => {
+        if (event.target === settingsModal) closeSettingsModal();
+      });
       closeWin.addEventListener("click", () => winModal.classList.remove("open"));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && settingsModal.classList.contains("open")) {
+          closeSettingsModal();
+        }
+      });
       document.addEventListener("visibilitychange", () => pauseGenerator(document.hidden));
       window.addEventListener("resize", () => render());
       setInterval(() => {
@@ -2769,6 +3008,7 @@
       }, 1000);
 
       syncTheme();
+      syncLayout();
       renderBank();
       startInitialGame();
       startGenerator();
