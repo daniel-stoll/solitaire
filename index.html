@@ -9,9 +9,11 @@
     (() => {
       try {
         const savedTheme = localStorage.getItem("singleFileSolitaire.theme.v1");
-        document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";
+        const themes = ["xp", "xp-dark", "simple", "modern", "arcade"];
+        const legacyThemes = { light: "xp", dark: "xp-dark" };
+        document.documentElement.dataset.theme = legacyThemes[savedTheme] || (themes.includes(savedTheme) ? savedTheme : "xp");
       } catch {
-        document.documentElement.dataset.theme = "light";
+        document.documentElement.dataset.theme = "xp";
       }
     })();
   </script>
@@ -21,29 +23,62 @@
       --felt: #0f7d3f;
       --felt-dark: #075c2d;
       --felt-light: #1b9b55;
+      --table-bg:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.08), transparent 24%),
+        radial-gradient(circle at 76% 12%, rgba(255,255,255,.06), transparent 22%),
+        linear-gradient(135deg, var(--felt-light), var(--felt) 38%, var(--felt-dark));
       --xp-blue-hi: #2f74df;
       --xp-blue: #1f5fbf;
       --xp-blue-dark: #17478d;
       --xp-blue-border: #092e72;
+      --titlebar-bg: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 48%, var(--xp-blue-dark));
+      --titlebar-border: var(--xp-blue-border);
+      --titlebar-shadow: inset 0 1px 0 rgba(255,255,255,.42);
+      --titlebar-text: #fff;
       --title-shadow: #08306d;
       --chrome: #d7d3c8;
       --chrome-hi: #f7f5ee;
       --chrome-shadow: #827e73;
+      --button-bg: linear-gradient(var(--chrome-hi), var(--chrome));
+      --button-border: #6d695e;
+      --button-border-top: #fff;
+      --button-border-left: #fff;
+      --button-active-border-right: #fff;
+      --button-active-border-bottom: #fff;
+      --button-radius: 3px;
+      --button-shadow: inset -1px -1px 0 var(--chrome-shadow);
+      --button-active-bg: var(--button-bg);
+      --button-active-shadow: inset 1px 1px 0 var(--chrome-shadow);
       --button-text: #111;
       --button-disabled: #777;
       --active-border: #4e668f;
+      --active-border-right: #fff;
+      --active-border-bottom: #fff;
       --active-hi: #fff8cf;
       --active: #ffd84a;
+      --active-bg: linear-gradient(var(--active-hi), var(--active));
       --active-shadow: #b49724;
+      --active-control-shadow: inset 1px 1px 0 var(--active-shadow);
+      --active-text: #111;
       --status-hi: #e8e5dc;
       --status: #c5c0b5;
+      --status-bg: linear-gradient(var(--status-hi), var(--status));
+      --status-border: #fff;
+      --status-shadow: inset 0 1px 0 #fff;
       --panel-bg: #ece9d8;
       --panel-text: #111;
       --badge-bg: #efede6;
       --badge-border: #8a867b;
+      --badge-border-top: #fff;
+      --badge-border-left: #fff;
       --badge-shadow: #aaa397;
       --message-text: #202020;
       --modal-shade: rgba(0,0,0,.24);
+      --dialog-border: var(--xp-blue-border);
+      --dialog-radius: 0px;
+      --dialog-shadow: 4px 5px 0 rgba(0,0,0,.26);
+      --dialog-title-bg: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 50%, var(--xp-blue-dark));
+      --dialog-title-text: #fff;
       --ink: #171717;
       --muted: #4b4b4b;
       --card-face: #f8f8f4;
@@ -57,15 +92,38 @@
       --card-back-border: #f4f4f4;
       --card-back-ring: #154eb0;
       --card-back-pattern: rgba(255,255,255,.18);
+      --card-back-bg:
+        linear-gradient(45deg, var(--card-back-pattern) 25%, transparent 25%, transparent 50%, var(--card-back-pattern) 50%, var(--card-back-pattern) 75%, transparent 75%),
+        linear-gradient(var(--card-back-top), var(--card-back-bottom));
+      --card-back-size: 11px 11px, auto;
+      --card-back-shadow: inset 0 0 0 3px var(--card-back-ring), inset 0 0 0 6px var(--card-back-border), var(--card-shadow);
       --card-back-center: rgba(11,47,120,.38);
       --card-back-center-glow: rgba(255,255,255,.28);
       --card-back-center-border: rgba(255,255,255,.86);
+      --card-back-center-display: block;
       --court-black-mantle: #315d9c;
       --court-red-mantle: #b92b39;
       --court-ink-base: #242633;
       --court-skin-base: #f2d0a9;
       --court-hair-base: #2b261f;
       --court-shadow-base: rgba(36,38,51,.14);
+      --court-robe-fill: #fff8e8;
+      --court-gold-fill: #d8ad27;
+      --court-white-fill: #fffdf2;
+      --slot-border: rgba(255,255,255,.35);
+      --slot-border-right: rgba(0,0,0,.18);
+      --slot-border-bottom: rgba(0,0,0,.18);
+      --slot-bg:
+        linear-gradient(135deg, rgba(0,0,0,.08), rgba(255,255,255,.08)),
+        rgba(0,0,0,.08);
+      --slot-shadow: inset 1px 1px 2px rgba(0,0,0,.18);
+      --slot-mark: rgba(255,255,255,.28);
+      --selected-shadow: 0 0 0 3px #ffd84a, 1px 2px 2px rgba(0,0,0,.32);
+      --hinted-shadow: 0 0 0 3px #9be4ff, 1px 2px 2px rgba(0,0,0,.32);
+      --celebration-face: #f8f8f4;
+      --celebration-ink: #151515;
+      --celebration-red: #c51e25;
+      --celebration-shadow: 1px 2px 3px rgba(0,0,0,.34);
       --card-w: clamp(44px, 11.4vw, 92px);
       --card-h: calc(var(--card-w) * 1.4);
       --gap: clamp(6px, 1.4vw, 12px);
@@ -75,9 +133,12 @@
       --board-w: calc(var(--card-w) * 7 + var(--gap) * 6);
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      font-family: Tahoma, Verdana, Segoe UI, Arial, sans-serif;
+      --ui-font: Tahoma, Verdana, Segoe UI, Arial, sans-serif;
+      --body-text: #fff;
+      font-family: var(--ui-font);
     }
 
+    :root[data-theme="xp-dark"],
     :root[data-theme="dark"] {
       color-scheme: dark;
       --felt: #073923;
@@ -129,6 +190,284 @@
       --court-shadow-base: rgba(32,34,43,.12);
     }
 
+    :root[data-theme="simple"] {
+      color-scheme: light;
+      --ui-font: Arial, Helvetica, sans-serif;
+      --body-text: #1f2933;
+      --felt: #f4f6f8;
+      --felt-dark: #dfe5ea;
+      --felt-light: #fff;
+      --table-bg: #f4f6f8;
+      --xp-blue-border: #ccd4dd;
+      --titlebar-bg: #fff;
+      --titlebar-border: #d4dce4;
+      --titlebar-shadow: none;
+      --titlebar-text: #111827;
+      --title-shadow: transparent;
+      --chrome: #fff;
+      --chrome-hi: #fff;
+      --chrome-shadow: transparent;
+      --button-bg: #fff;
+      --button-border: #b7c1cc;
+      --button-border-top: #b7c1cc;
+      --button-border-left: #b7c1cc;
+      --button-active-border-right: #b7c1cc;
+      --button-active-border-bottom: #b7c1cc;
+      --button-radius: 2px;
+      --button-shadow: none;
+      --button-active-bg: #eef2f5;
+      --button-active-shadow: none;
+      --button-text: #111827;
+      --button-disabled: #8a94a3;
+      --active-border: #111827;
+      --active-border-right: #111827;
+      --active-border-bottom: #111827;
+      --active-bg: #111827;
+      --active-control-shadow: none;
+      --active-text: #fff;
+      --status-bg: #fff;
+      --status-border: #d4dce4;
+      --status-shadow: none;
+      --panel-bg: #fff;
+      --panel-text: #111827;
+      --badge-bg: #fff;
+      --badge-border: #ccd4dd;
+      --badge-border-top: #ccd4dd;
+      --badge-border-left: #ccd4dd;
+      --badge-shadow: transparent;
+      --message-text: #374151;
+      --modal-shade: rgba(15,23,42,.18);
+      --dialog-border: #ccd4dd;
+      --dialog-radius: 2px;
+      --dialog-shadow: 0 12px 34px rgba(15,23,42,.12);
+      --dialog-title-bg: #fff;
+      --dialog-title-text: #111827;
+      --card-face: #fff;
+      --card-face-end: #fff;
+      --card-ink: #111827;
+      --card-red: #d21f3c;
+      --card-border: #8d98a4;
+      --card-shadow: none;
+      --card-back-top: #e4e9ef;
+      --card-back-bottom: #e4e9ef;
+      --card-back-border: #8894a2;
+      --card-back-ring: #8894a2;
+      --card-back-pattern: transparent;
+      --card-back-bg: #e4e9ef;
+      --card-back-size: auto;
+      --card-back-shadow: none;
+      --card-back-center-display: none;
+      --court-black-mantle: #5f6b7a;
+      --court-red-mantle: #d21f3c;
+      --court-ink-base: #111827;
+      --court-skin-base: #efc9a1;
+      --court-hair-base: #232323;
+      --court-shadow-base: transparent;
+      --court-robe-fill: #fff;
+      --court-gold-fill: #c6a24a;
+      --court-white-fill: #fff;
+      --slot-border: rgba(17,24,39,.24);
+      --slot-border-right: rgba(17,24,39,.24);
+      --slot-border-bottom: rgba(17,24,39,.24);
+      --slot-bg: transparent;
+      --slot-shadow: none;
+      --slot-mark: rgba(17,24,39,.18);
+      --selected-shadow: 0 0 0 3px #111827;
+      --hinted-shadow: 0 0 0 3px #0284c7;
+      --celebration-face: #fff;
+      --celebration-ink: #111827;
+      --celebration-red: #d21f3c;
+      --celebration-shadow: none;
+      --radius: 2px;
+    }
+
+    :root[data-theme="modern"] {
+      color-scheme: light;
+      --ui-font: Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      --body-text: #0f172a;
+      --felt: #159178;
+      --felt-dark: #12443d;
+      --felt-light: #dff8ef;
+      --table-bg:
+        radial-gradient(circle at 16% 8%, rgba(255,255,255,.35), transparent 24%),
+        radial-gradient(circle at 85% 16%, rgba(247,170,91,.28), transparent 20%),
+        linear-gradient(135deg, #dff8ef, #159178 42%, #12443d);
+      --xp-blue-border: #d5e1e6;
+      --titlebar-bg: rgba(255,255,255,.9);
+      --titlebar-border: rgba(15,23,42,.12);
+      --titlebar-shadow: 0 8px 28px rgba(15,23,42,.12);
+      --titlebar-text: #0f172a;
+      --title-shadow: transparent;
+      --chrome: #fff;
+      --chrome-hi: #fff;
+      --chrome-shadow: rgba(15,23,42,.14);
+      --button-bg: #fff;
+      --button-border: #d8e2e7;
+      --button-border-top: #d8e2e7;
+      --button-border-left: #d8e2e7;
+      --button-active-border-right: #d8e2e7;
+      --button-active-border-bottom: #d8e2e7;
+      --button-radius: 8px;
+      --button-shadow: 0 2px 8px rgba(15,23,42,.08);
+      --button-active-bg: #edf8f4;
+      --button-active-shadow: inset 0 1px 2px rgba(15,23,42,.12);
+      --button-text: #172033;
+      --button-disabled: #8a97a5;
+      --active-border: #0f766e;
+      --active-border-right: #0f766e;
+      --active-border-bottom: #0f766e;
+      --active-bg: #0f766e;
+      --active-control-shadow: 0 4px 12px rgba(15,118,110,.22);
+      --active-text: #fff;
+      --status-bg: rgba(255,255,255,.92);
+      --status-border: rgba(15,23,42,.12);
+      --status-shadow: 0 -8px 24px rgba(15,23,42,.10);
+      --panel-bg: #fff;
+      --panel-text: #172033;
+      --badge-bg: #f8fbfc;
+      --badge-border: #d8e2e7;
+      --badge-border-top: #d8e2e7;
+      --badge-border-left: #d8e2e7;
+      --badge-shadow: transparent;
+      --message-text: #243244;
+      --modal-shade: rgba(15,23,42,.32);
+      --dialog-border: rgba(15,23,42,.12);
+      --dialog-radius: 8px;
+      --dialog-shadow: 0 22px 60px rgba(15,23,42,.24);
+      --dialog-title-bg: #fff;
+      --dialog-title-text: #0f172a;
+      --card-face: #fffef9;
+      --card-face-end: #f7fbf9;
+      --card-ink: #111827;
+      --card-red: #d9304f;
+      --card-border: rgba(15,23,42,.48);
+      --card-shadow: 0 8px 18px rgba(15,23,42,.18), 0 0 0 1px rgba(255,255,255,.72);
+      --card-back-top: #14b8a6;
+      --card-back-bottom: #155e75;
+      --card-back-border: #f8fffc;
+      --card-back-ring: rgba(255,255,255,.32);
+      --card-back-pattern: rgba(255,255,255,.20);
+      --card-back-center: rgba(15,118,110,.34);
+      --card-back-center-glow: rgba(255,255,255,.42);
+      --card-back-center-border: rgba(255,255,255,.86);
+      --court-black-mantle: #2866a5;
+      --court-red-mantle: #d9304f;
+      --court-ink-base: #1f2937;
+      --court-skin-base: #f0c7a4;
+      --court-hair-base: #2f2924;
+      --court-shadow-base: rgba(15,23,42,.10);
+      --court-robe-fill: #fff8e8;
+      --court-gold-fill: #e3ad2f;
+      --court-white-fill: #fffef8;
+      --slot-border: rgba(255,255,255,.60);
+      --slot-border-right: rgba(15,23,42,.18);
+      --slot-border-bottom: rgba(15,23,42,.18);
+      --slot-bg: rgba(255,255,255,.14);
+      --slot-shadow: inset 0 1px 7px rgba(15,23,42,.16);
+      --slot-mark: rgba(255,255,255,.42);
+      --selected-shadow: 0 0 0 3px #fbbf24, 0 10px 22px rgba(15,23,42,.18);
+      --hinted-shadow: 0 0 0 3px #38bdf8, 0 10px 22px rgba(15,23,42,.18);
+      --celebration-face: #fffef9;
+      --celebration-ink: #111827;
+      --celebration-red: #d9304f;
+      --celebration-shadow: 0 8px 18px rgba(15,23,42,.18);
+      --radius: 8px;
+    }
+
+    :root[data-theme="arcade"] {
+      color-scheme: dark;
+      --ui-font: Trebuchet MS, Segoe UI, Arial, sans-serif;
+      --body-text: #eaffff;
+      --felt: #101521;
+      --felt-dark: #07080d;
+      --felt-light: #26333d;
+      --table-bg:
+        radial-gradient(circle at 16% 14%, rgba(25,211,255,.24), transparent 22%),
+        radial-gradient(circle at 82% 10%, rgba(255,228,92,.20), transparent 18%),
+        radial-gradient(circle at 50% 95%, rgba(255,79,216,.18), transparent 26%),
+        linear-gradient(135deg, #26333d, #101521 48%, #07080d);
+      --xp-blue-border: #19d3ff;
+      --titlebar-bg: linear-gradient(90deg, #07080d, #15151e 45%, #2a172b);
+      --titlebar-border: #19d3ff;
+      --titlebar-shadow: 0 0 0 1px rgba(255,79,216,.38), 0 8px 28px rgba(0,0,0,.42);
+      --titlebar-text: #f8fdff;
+      --title-shadow: #ff4fd8;
+      --chrome: #131a25;
+      --chrome-hi: #1e2735;
+      --chrome-shadow: rgba(0,0,0,.78);
+      --button-bg: linear-gradient(#1e2735, #101621);
+      --button-border: #19d3ff;
+      --button-border-top: #67f3ff;
+      --button-border-left: #67f3ff;
+      --button-active-border-right: #ff4fd8;
+      --button-active-border-bottom: #ff4fd8;
+      --button-radius: 6px;
+      --button-shadow: 0 0 0 1px rgba(25,211,255,.16), 0 0 12px rgba(25,211,255,.22);
+      --button-active-bg: linear-gradient(#0e1320, #07080d);
+      --button-active-shadow: inset 0 0 12px rgba(255,79,216,.22);
+      --button-text: #eaffff;
+      --button-disabled: #74818f;
+      --active-border: #ffe45c;
+      --active-border-right: #ff4fd8;
+      --active-border-bottom: #ff4fd8;
+      --active-bg: linear-gradient(135deg, #ffe45c, #ff8bd2);
+      --active-control-shadow: 0 0 16px rgba(255,228,92,.35);
+      --active-text: #07080d;
+      --status-bg: linear-gradient(90deg, #0b0f18, #111827);
+      --status-border: #19d3ff;
+      --status-shadow: 0 -1px 0 rgba(255,79,216,.62), 0 -8px 24px rgba(0,0,0,.38);
+      --panel-bg: #0d111b;
+      --panel-text: #eaffff;
+      --badge-bg: #101621;
+      --badge-border: #19d3ff;
+      --badge-border-top: #67f3ff;
+      --badge-border-left: #67f3ff;
+      --badge-shadow: rgba(255,79,216,.42);
+      --message-text: #f8fdff;
+      --modal-shade: rgba(3,5,10,.72);
+      --dialog-border: #19d3ff;
+      --dialog-radius: 6px;
+      --dialog-shadow: 0 0 0 2px rgba(25,211,255,.55), 0 0 28px rgba(255,79,216,.25);
+      --dialog-title-bg: linear-gradient(90deg, #101621, #28152a);
+      --dialog-title-text: #f8fdff;
+      --card-face: #fff6db;
+      --card-face-end: #f8eed2;
+      --card-ink: #0a0f1a;
+      --card-red: #ff315f;
+      --card-border: #09111e;
+      --card-shadow: 0 0 0 2px rgba(25,211,255,.30), 0 8px 0 rgba(0,0,0,.28);
+      --card-back-top: #ff4fd8;
+      --card-back-bottom: #19d3ff;
+      --card-back-border: #ffe45c;
+      --card-back-ring: #07080d;
+      --card-back-pattern: rgba(7,8,13,.24);
+      --card-back-center: rgba(7,8,13,.28);
+      --card-back-center-glow: rgba(255,228,92,.34);
+      --card-back-center-border: #ffe45c;
+      --court-black-mantle: #168de2;
+      --court-red-mantle: #ff315f;
+      --court-ink-base: #0a0f1a;
+      --court-skin-base: #f2c49d;
+      --court-hair-base: #1d1722;
+      --court-shadow-base: rgba(0,0,0,.14);
+      --court-robe-fill: #fff6db;
+      --court-gold-fill: #ffe45c;
+      --court-white-fill: #fffef2;
+      --slot-border: rgba(25,211,255,.48);
+      --slot-border-right: rgba(255,79,216,.36);
+      --slot-border-bottom: rgba(255,79,216,.36);
+      --slot-bg: rgba(7,8,13,.28);
+      --slot-shadow: inset 0 0 12px rgba(25,211,255,.14);
+      --slot-mark: rgba(255,228,92,.42);
+      --selected-shadow: 0 0 0 3px #ffe45c, 0 0 20px rgba(255,228,92,.42);
+      --hinted-shadow: 0 0 0 3px #19d3ff, 0 0 20px rgba(25,211,255,.44);
+      --celebration-face: #fff6db;
+      --celebration-ink: #0a0f1a;
+      --celebration-red: #ff315f;
+      --celebration-shadow: 0 0 12px rgba(25,211,255,.26), 0 8px 0 rgba(0,0,0,.28);
+      --radius: 6px;
+    }
+
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -141,16 +480,13 @@
       margin: 0;
       overflow: hidden;
       background: var(--felt-dark);
-      color: #fff;
+      color: var(--body-text);
     }
 
     body {
       display: flex;
       justify-content: center;
-      background:
-        radial-gradient(circle at 18% 18%, rgba(255,255,255,.08), transparent 24%),
-        radial-gradient(circle at 76% 12%, rgba(255,255,255,.06), transparent 22%),
-        linear-gradient(135deg, var(--felt-light), var(--felt) 38%, var(--felt-dark));
+      background: var(--table-bg);
     }
 
     .app {
@@ -163,9 +499,10 @@
 
     .titlebar {
       padding-top: var(--safe-top);
-      background: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 48%, var(--xp-blue-dark));
-      border-bottom: 1px solid var(--xp-blue-border);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.42);
+      background: var(--titlebar-bg);
+      border-bottom: 1px solid var(--titlebar-border);
+      box-shadow: var(--titlebar-shadow);
+      color: var(--titlebar-text);
     }
 
     .titlebar-inner {
@@ -185,6 +522,7 @@
       font-weight: 700;
       text-shadow: 0 1px var(--title-shadow);
       margin-right: 4px;
+      color: var(--titlebar-text);
     }
 
     .toolbar {
@@ -204,14 +542,14 @@
 
     button {
       height: 28px;
-      border: 1px solid #6d695e;
-      border-top-color: #fff;
-      border-left-color: #fff;
-      border-radius: 3px;
-      background: linear-gradient(var(--chrome-hi), var(--chrome));
+      border: 1px solid var(--button-border);
+      border-top-color: var(--button-border-top);
+      border-left-color: var(--button-border-left);
+      border-radius: var(--button-radius);
+      background: var(--button-bg);
       color: var(--button-text);
-      box-shadow: inset -1px -1px 0 var(--chrome-shadow);
-      font: 12px Tahoma, Verdana, Arial, sans-serif;
+      box-shadow: var(--button-shadow);
+      font: 12px var(--ui-font);
       padding: 0 9px;
     }
 
@@ -221,10 +559,11 @@
     }
 
     button:active {
-      border: 1px solid #6d695e;
-      border-right-color: #fff;
-      border-bottom-color: #fff;
-      box-shadow: inset 1px 1px 0 var(--chrome-shadow);
+      border: 1px solid var(--button-border);
+      border-right-color: var(--button-active-border-right);
+      border-bottom-color: var(--button-active-border-bottom);
+      background: var(--button-active-bg);
+      box-shadow: var(--button-active-shadow);
       padding-top: 1px;
     }
 
@@ -242,20 +581,27 @@
     }
 
     .deal-mode,
-    .layout-mode {
+    .theme-mode,
+    .layout-mode,
+    .performance-toggle {
       min-width: 58px;
       padding: 0 7px;
     }
 
     .deal-mode.active,
     .deal-mode[aria-pressed="true"],
+    .theme-mode.active,
+    .theme-mode[aria-pressed="true"],
     .layout-mode.active,
-    .layout-mode[aria-pressed="true"] {
+    .layout-mode[aria-pressed="true"],
+    .performance-toggle.active,
+    .performance-toggle[aria-pressed="true"] {
       border: 1px solid var(--active-border);
-      border-right-color: #fff;
-      border-bottom-color: #fff;
-      background: linear-gradient(var(--active-hi), var(--active));
-      box-shadow: inset 1px 1px 0 var(--active-shadow);
+      border-right-color: var(--active-border-right);
+      border-bottom-color: var(--active-border-bottom);
+      background: var(--active-bg);
+      box-shadow: var(--active-control-shadow);
+      color: var(--active-text);
       font-weight: 700;
     }
 
@@ -268,9 +614,37 @@
       width: 34px;
       min-width: 34px;
       padding: 0;
+      display: grid;
+      place-items: center;
       white-space: nowrap;
-      font-size: 17px;
       line-height: 1;
+    }
+
+    .settings-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      position: relative;
+      color: currentColor;
+    }
+
+    .settings-icon-sliders {
+      background:
+        linear-gradient(currentColor, currentColor) 2px 3px / 14px 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 2px 8px / 14px 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 2px 13px / 14px 2px no-repeat;
+    }
+
+    .settings-icon-sliders::before {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      left: 5px;
+      top: 2px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 6px 5px 0 currentColor, -2px 10px 0 currentColor;
     }
 
     .settings-row {
@@ -278,6 +652,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+    }
+
+    .performance-controls-row {
+      display: none;
     }
 
     .settings-row .dialog-label {
@@ -291,7 +669,7 @@
 
     .settings-options {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 5px;
     }
 
@@ -300,14 +678,25 @@
       width: 100%;
     }
 
-    .settings-note {
-      min-height: 15px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.25;
+    .theme-options .theme-mode:last-child {
+      grid-column: 1 / -1;
     }
 
-    .theme-toggle {
+    .settings-number {
+      width: 86px;
+      height: 28px;
+      border: 1px solid var(--button-border);
+      border-top-color: var(--button-border-top);
+      border-left-color: var(--button-border-left);
+      border-radius: var(--button-radius);
+      background: var(--badge-bg);
+      color: var(--panel-text);
+      box-shadow: var(--button-shadow);
+      font: 12px var(--ui-font);
+      padding: 0 7px;
+    }
+
+    .performance-toggle {
       min-width: 92px;
     }
 
@@ -351,36 +740,24 @@
       align-items: end;
     }
 
-    :root[data-layout="performance"] .bottom-row {
+    :root[data-performance-controls="on"] .bottom-row {
       display: grid;
       margin-top: auto;
     }
 
-    :root[data-layout="performance"] .bottom-row .stock-pile {
+    :root[data-performance-controls="on"] .bottom-row .bottom-stock-pile {
       grid-column: 1;
     }
 
-    :root[data-layout="performance"] .bottom-row .waste-pile {
-      grid-column: 7;
-    }
-
-    :root[data-layout="performance"] .top-row .spacer {
-      grid-column: 3;
-    }
-
-    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="0"] {
+    :root[data-performance-controls="on"] .bottom-row .bottom-auto-move {
       grid-column: 4;
+      align-self: center;
+      width: var(--card-w);
+      min-width: 0;
+      padding: 0 4px;
     }
 
-    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="1"] {
-      grid-column: 5;
-    }
-
-    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="2"] {
-      grid-column: 6;
-    }
-
-    :root[data-layout="performance"] .top-row .foundation-pile[data-pile-index="3"] {
+    :root[data-performance-controls="on"] .bottom-row .bottom-waste-pile {
       grid-column: 7;
     }
 
@@ -401,14 +778,12 @@
     .slot {
       position: absolute;
       inset: 0;
-      border: 2px solid rgba(255,255,255,.35);
-      border-right-color: rgba(0,0,0,.18);
-      border-bottom-color: rgba(0,0,0,.18);
+      border: 2px solid var(--slot-border);
+      border-right-color: var(--slot-border-right);
+      border-bottom-color: var(--slot-border-bottom);
       border-radius: var(--radius);
-      background:
-        linear-gradient(135deg, rgba(0,0,0,.08), rgba(255,255,255,.08)),
-        rgba(0,0,0,.08);
-      box-shadow: inset 1px 1px 2px rgba(0,0,0,.18);
+      background: var(--slot-bg);
+      box-shadow: var(--slot-shadow);
     }
 
     .slot.foundation::after {
@@ -417,7 +792,7 @@
       inset: 0;
       display: grid;
       place-items: center;
-      color: rgba(255,255,255,.28);
+      color: var(--slot-mark);
       font-size: calc(var(--card-w) * .5);
       font-family: Georgia, serif;
     }
@@ -460,12 +835,10 @@
 
     .card.face-down {
       background-color: var(--card-back-bottom);
-      background:
-        linear-gradient(45deg, var(--card-back-pattern) 25%, transparent 25%, transparent 50%, var(--card-back-pattern) 50%, var(--card-back-pattern) 75%, transparent 75%),
-        linear-gradient(var(--card-back-top), var(--card-back-bottom));
-      background-size: 11px 11px, auto;
+      background: var(--card-back-bg);
+      background-size: var(--card-back-size);
       border: 2px solid var(--card-back-border);
-      box-shadow: inset 0 0 0 3px var(--card-back-ring), inset 0 0 0 6px var(--card-back-border), var(--card-shadow);
+      box-shadow: var(--card-back-shadow);
       cursor: default;
     }
 
@@ -473,6 +846,7 @@
       content: "";
       position: absolute;
       inset: 18%;
+      display: var(--card-back-center-display);
       border: 2px solid var(--card-back-center-border);
       border-radius: 5px;
       background:
@@ -658,7 +1032,7 @@
     }
 
     .court-robe {
-      fill: #fff8e8;
+      fill: var(--court-robe-fill);
       stroke: var(--court-ink);
       stroke-width: 3;
       stroke-linejoin: round;
@@ -680,7 +1054,7 @@
     }
 
     .court-gold {
-      fill: #d8ad27;
+      fill: var(--court-gold-fill);
       stroke: var(--court-ink);
       stroke-width: 3;
       stroke-linejoin: round;
@@ -693,7 +1067,7 @@
     }
 
     .court-white {
-      fill: #fffdf2;
+      fill: var(--court-white-fill);
       stroke: var(--court-ink);
       stroke-width: 3;
       stroke-linejoin: round;
@@ -709,12 +1083,12 @@
     }
 
     .selected {
-      box-shadow: 0 0 0 3px #ffd84a, 1px 2px 2px rgba(0,0,0,.32);
+      box-shadow: var(--selected-shadow);
       filter: brightness(1.04);
     }
 
     .hinted {
-      box-shadow: 0 0 0 3px #9be4ff, 1px 2px 2px rgba(0,0,0,.32);
+      box-shadow: var(--hinted-shadow);
     }
 
     .dragging {
@@ -747,11 +1121,11 @@
       position: absolute;
       width: clamp(34px, 5.4vw, 58px);
       height: calc(clamp(34px, 5.4vw, 58px) * 1.4);
-      border: 1px solid #151515;
+      border: 1px solid var(--card-border);
       border-radius: 6px;
-      background: #f8f8f4;
-      color: #151515;
-      box-shadow: 1px 2px 3px rgba(0,0,0,.34);
+      background: var(--celebration-face);
+      color: var(--celebration-ink);
+      box-shadow: var(--celebration-shadow);
       display: grid;
       place-items: center;
       font-weight: 700;
@@ -762,7 +1136,7 @@
     }
 
     .celebration-card.red {
-      color: #c51e25;
+      color: var(--celebration-red);
     }
 
     @keyframes win-card {
@@ -793,10 +1167,10 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      background: linear-gradient(var(--status-hi), var(--status));
-      border-top: 1px solid #fff;
+      background: var(--status-bg);
+      border-top: 1px solid var(--status-border);
       color: var(--panel-text);
-      box-shadow: inset 0 1px 0 #fff;
+      box-shadow: var(--status-shadow);
       font-size: 12px;
     }
 
@@ -814,8 +1188,8 @@
       align-items: center;
       padding: 2px 7px;
       border: 1px solid var(--badge-border);
-      border-top-color: #fff;
-      border-left-color: #fff;
+      border-top-color: var(--badge-border-top);
+      border-left-color: var(--badge-border-left);
       background: var(--badge-bg);
       box-shadow: inset -1px -1px 0 var(--badge-shadow);
       color: var(--panel-text);
@@ -844,16 +1218,18 @@
 
     .dialog {
       width: min(360px, 100%);
-      border: 1px solid var(--xp-blue-border);
+      border: 1px solid var(--dialog-border);
+      border-radius: var(--dialog-radius);
       background: var(--panel-bg);
       color: var(--panel-text);
-      box-shadow: 4px 5px 0 rgba(0,0,0,.26);
+      box-shadow: var(--dialog-shadow);
+      overflow: hidden;
     }
 
     .dialog-title {
       padding: 7px 9px;
-      background: linear-gradient(var(--xp-blue-hi), var(--xp-blue) 50%, var(--xp-blue-dark));
-      color: #fff;
+      background: var(--dialog-title-bg);
+      color: var(--dialog-title-text);
       font-weight: 700;
       text-shadow: 0 1px var(--title-shadow);
     }
@@ -934,17 +1310,18 @@
         flex-direction: column;
       }
 
-      .theme-toggle {
+      .performance-controls-row {
+        display: flex;
+      }
+
+      .performance-toggle,
+      .settings-number {
         width: 100%;
       }
 
       button {
         height: 30px;
         padding: 0 7px;
-      }
-
-      .toolbar > .deal-modes .deal-mode {
-        min-width: 0;
       }
 
       .toolbar {
@@ -955,7 +1332,6 @@
         gap: 5px;
       }
 
-      .toolbar > .deal-modes,
       .toolbar-actions {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -963,7 +1339,6 @@
         width: 100%;
       }
 
-      .toolbar > .deal-modes .deal-mode,
       .toolbar-actions button {
         min-width: 0;
         width: 100%;
@@ -1016,20 +1391,16 @@
           <span>Solitaire</span>
         </div>
         <div class="toolbar">
-          <div class="deal-modes" id="dealModes" aria-label="Deal difficulty">
-            <button class="deal-mode" type="button" data-deal-mode="easy" aria-pressed="false">Easy</button>
-            <button class="deal-mode" type="button" data-deal-mode="medium" aria-pressed="false">Medium</button>
-            <button class="deal-mode" type="button" data-deal-mode="hard" aria-pressed="false">Hard</button>
-            <button class="deal-mode" type="button" data-deal-mode="random" aria-pressed="false">Random</button>
-          </div>
           <div class="toolbar-actions">
-            <button id="newGame" class="toolbar-separator" title="Start a new deal">New</button>
+            <button id="newGame" title="Start a new deal">New</button>
             <button id="restart" title="Restart this deal">Restart</button>
             <button id="hint" title="Show a hint">Hint</button>
             <button id="undo" class="toolbar-separator" title="Undo last move">Undo</button>
           </div>
         </div>
-        <button id="settingsToggle" class="settings-toggle" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="settingsModal" aria-label="Open settings" title="Settings">&#9881;</button>
+        <button id="settingsToggle" class="settings-toggle" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="settingsModal" aria-label="Open settings" title="Settings">
+          <span id="settingsIconMark" class="settings-icon settings-icon-sliders" aria-hidden="true"></span>
+        </button>
       </div>
     </header>
 
@@ -1053,7 +1424,11 @@
           <div class="tableau-col" data-pile="tableau" data-pile-index="5"><div class="slot"></div></div>
           <div class="tableau-col" data-pile="tableau" data-pile-index="6"><div class="slot"></div></div>
         </div>
-        <div class="bottom-row" id="bottomRow"></div>
+        <div class="bottom-row" id="bottomRow">
+          <div class="pile bottom-stock-pile" data-pile="stock"><div class="slot"></div></div>
+          <button id="bottomAutoMove" class="bottom-auto-move" type="button" title="Auto move safe cards">Auto</button>
+          <div class="pile bottom-waste-pile" data-pile="waste"><div class="slot"></div></div>
+        </div>
       </div>
     </section>
 
@@ -1077,18 +1452,39 @@
     <div class="dialog">
       <div class="dialog-title" id="settingsTitle">Settings</div>
       <div class="dialog-body">
+        <div class="settings-field">
+          <div class="dialog-label">Difficulty</div>
+          <div class="settings-options" id="dealModes" aria-label="Deal difficulty">
+            <button class="deal-mode" type="button" data-deal-mode="easy" aria-pressed="false">Easy</button>
+            <button class="deal-mode" type="button" data-deal-mode="medium" aria-pressed="false">Medium</button>
+            <button class="deal-mode" type="button" data-deal-mode="hard" aria-pressed="false">Hard</button>
+            <button class="deal-mode" type="button" data-deal-mode="random" aria-pressed="false">Random</button>
+          </div>
+        </div>
         <div class="settings-row">
+          <label class="dialog-label" for="bankLimit">Banked games</label>
+          <input id="bankLimit" class="settings-number" type="number" min="0" max="20" step="1" inputmode="numeric" aria-label="Maximum banked games per difficulty">
+        </div>
+        <div class="settings-field">
           <div class="dialog-label">Theme</div>
-          <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" aria-live="polite">Light</button>
+          <div class="settings-options theme-options" id="themeModes" aria-label="Theme">
+            <button class="theme-mode" type="button" data-theme-mode="xp" aria-pressed="false">XP</button>
+            <button class="theme-mode" type="button" data-theme-mode="xp-dark" aria-pressed="false">XP Dark</button>
+            <button class="theme-mode" type="button" data-theme-mode="simple" aria-pressed="false">Simple</button>
+            <button class="theme-mode" type="button" data-theme-mode="modern" aria-pressed="false">Modern</button>
+            <button class="theme-mode" type="button" data-theme-mode="arcade" aria-pressed="false">Arcade</button>
+          </div>
         </div>
         <div class="settings-field">
           <div class="dialog-label">Layout</div>
           <div class="settings-options" id="layoutModes" aria-label="Layout">
             <button class="layout-mode" type="button" data-layout-mode="default" aria-pressed="false">Default</button>
             <button class="layout-mode" type="button" data-layout-mode="right" aria-pressed="false">Right</button>
-            <button class="layout-mode" type="button" data-layout-mode="performance" aria-pressed="false">Performance</button>
           </div>
-          <div class="settings-note" id="layoutNote" aria-live="polite"></div>
+        </div>
+        <div class="settings-row performance-controls-row">
+          <div class="dialog-label">Performance controls</div>
+          <button id="performanceControlsToggle" class="performance-toggle" type="button" aria-pressed="false" aria-label="Show performance controls" title="Show performance controls">Off</button>
         </div>
       </div>
       <div class="dialog-actions">
@@ -1127,7 +1523,8 @@
       const SUIT_SYMBOLS = ["\u2660", "\u2665", "\u2666", "\u2663"];
       const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
       const DEAL_MODES = ["easy", "medium", "hard", "random"];
-      const LAYOUTS = ["default", "right", "performance"];
+      const THEMES = ["xp", "xp-dark", "simple", "modern", "arcade"];
+      const LAYOUTS = ["default", "right"];
       const PIP_LAYOUTS = {
         1: [{ pos: "mc", large: true }],
         2: [{ pos: "tc" }, { pos: "bc", flip: true }],
@@ -1145,7 +1542,11 @@
       const DEAL_MODE_KEY = "singleFileSolitaire.dealMode.v1";
       const THEME_KEY = "singleFileSolitaire.theme.v1";
       const LAYOUT_KEY = "singleFileSolitaire.layout.v1";
-      const MAX_BANK = 3;
+      const PERFORMANCE_CONTROLS_KEY = "singleFileSolitaire.performanceControls.v1";
+      const BANK_LIMIT_KEY = "singleFileSolitaire.bankLimit.v1";
+      const DEFAULT_BANK_LIMIT = 3;
+      const MIN_BANK_LIMIT = 0;
+      const MAX_BANK_LIMIT = 20;
       const board = document.getElementById("board");
       const tableauEl = document.getElementById("tableau");
       const boardWrap = document.getElementById("boardWrap");
@@ -1153,19 +1554,23 @@
       const bottomRowEl = document.getElementById("bottomRow");
       const stockPileEl = document.querySelector(".stock-pile");
       const wastePileEl = document.querySelector(".waste-pile");
+      const bottomStockPileEl = document.querySelector(".bottom-stock-pile");
+      const bottomAutoMoveBtn = document.getElementById("bottomAutoMove");
+      const bottomWastePileEl = document.querySelector(".bottom-waste-pile");
       const spacerPileEl = document.querySelector(".spacer");
       const foundationPileEls = [...document.querySelectorAll(".foundation-pile")];
       const dealModeButtons = [...document.querySelectorAll("[data-deal-mode]")];
+      const themeModeButtons = [...document.querySelectorAll("[data-theme-mode]")];
       const layoutModeButtons = [...document.querySelectorAll("[data-layout-mode]")];
+      const bankLimitInput = document.getElementById("bankLimit");
       const newGameBtn = document.getElementById("newGame");
       const restartBtn = document.getElementById("restart");
       const undoBtn = document.getElementById("undo");
       const hintBtn = document.getElementById("hint");
       const settingsToggle = document.getElementById("settingsToggle");
       const settingsModal = document.getElementById("settingsModal");
-      const themeToggle = document.getElementById("themeToggle");
+      const performanceControlsToggle = document.getElementById("performanceControlsToggle");
       const closeSettings = document.getElementById("closeSettings");
-      const layoutNote = document.getElementById("layoutNote");
       const movesEl = document.getElementById("moves");
       const timeEl = document.getElementById("time");
       const scoreEl = document.getElementById("score");
@@ -1187,6 +1592,7 @@
       let autoFinishTimer = 0;
       let queuedAnimations = [];
       let pendingDealMode = null;
+      let bankLimit = loadBankLimit();
       let bank = loadBank();
       let generator = null;
       let stats = loadStats();
@@ -1195,6 +1601,7 @@
       let selectedDealMode = loadDealMode();
       let selectedTheme = loadTheme();
       let selectedLayout = loadLayout();
+      let performanceControlsEnabled = loadPerformanceControls();
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -1357,6 +1764,28 @@
         game.elapsedBefore = snapshotGame.elapsedBefore || 0;
       }
 
+      function normalizeBankLimit(value) {
+        const numeric = Number.parseInt(value, 10);
+        if (!Number.isFinite(numeric)) return DEFAULT_BANK_LIMIT;
+        return Math.max(MIN_BANK_LIMIT, Math.min(MAX_BANK_LIMIT, numeric));
+      }
+
+      function loadBankLimit() {
+        try {
+          return normalizeBankLimit(localStorage.getItem(BANK_LIMIT_KEY));
+        } catch {
+          return DEFAULT_BANK_LIMIT;
+        }
+      }
+
+      function saveBankLimit() {
+        try {
+          localStorage.setItem(BANK_LIMIT_KEY, String(bankLimit));
+        } catch {
+          // Bank limit persistence is nice-to-have; the value still works for this page load.
+        }
+      }
+
       function loadBank() {
         try {
           const parsed = JSON.parse(localStorage.getItem(BANK_KEY) || "{}");
@@ -1375,13 +1804,39 @@
         const seen = new Set();
         return deals
           .filter((deal) => deal && Number.isFinite(deal.seed) && !seen.has(deal.seed) && seen.add(deal.seed))
-          .slice(0, MAX_BANK);
+          .slice(0, bankLimit);
       }
 
       function saveBank() {
         localStorage.setItem(BANK_KEY, JSON.stringify(bank));
         syncGenerator();
         renderBank();
+      }
+
+      function trimBankToLimit() {
+        bank.easy = bank.easy.slice(0, bankLimit);
+        bank.medium = bank.medium.slice(0, bankLimit);
+        bank.hard = bank.hard.slice(0, bankLimit);
+      }
+
+      function syncBankLimitInput() {
+        bankLimitInput.min = String(MIN_BANK_LIMIT);
+        bankLimitInput.max = String(MAX_BANK_LIMIT);
+        bankLimitInput.value = String(bankLimit);
+        bankLimitInput.title = `Maximum banked games per difficulty (${MIN_BANK_LIMIT}-${MAX_BANK_LIMIT})`;
+      }
+
+      function setBankLimit(value) {
+        const nextLimit = normalizeBankLimit(value);
+        if (nextLimit === bankLimit) {
+          syncBankLimitInput();
+          return;
+        }
+        bankLimit = nextLimit;
+        trimBankToLimit();
+        saveBankLimit();
+        syncBankLimitInput();
+        saveBank();
       }
 
       function loadStats() {
@@ -1413,7 +1868,9 @@
       }
 
       function normalizeTheme(theme) {
-        return theme === "dark" ? "dark" : "light";
+        if (theme === "light") return "xp";
+        if (theme === "dark") return "xp-dark";
+        return THEMES.includes(theme) ? theme : "xp";
       }
 
       function loadTheme() {
@@ -1452,23 +1909,36 @@
         }
       }
 
-      function performanceLayoutAvailable() {
-        if (window.matchMedia) {
-          return window.matchMedia("(max-width: 560px) and (orientation: portrait)").matches;
+      function loadPerformanceControls() {
+        try {
+          const saved = localStorage.getItem(PERFORMANCE_CONTROLS_KEY);
+          if (saved === "true") return true;
+          if (saved === "false") return false;
+          return localStorage.getItem(LAYOUT_KEY) === "performance";
+        } catch {
+          return false;
         }
-        return window.innerWidth <= 560 && window.innerHeight >= window.innerWidth;
       }
 
-      function effectiveLayout() {
-        if (selectedLayout === "performance" && !performanceLayoutAvailable()) return "default";
-        return selectedLayout;
+      function savePerformanceControls() {
+        try {
+          localStorage.setItem(PERFORMANCE_CONTROLS_KEY, performanceControlsEnabled ? "true" : "false");
+        } catch {
+          // Performance control persistence is nice-to-have; the toggle still works for this page load.
+        }
+      }
+
+      function performanceControlsAvailable() {
+        if (window.matchMedia) return window.matchMedia("(max-width: 560px)").matches;
+        return window.innerWidth <= 560;
+      }
+
+      function performanceControlsActive() {
+        return performanceControlsEnabled && performanceControlsAvailable();
       }
 
       function arrangeLayout(layout) {
-        if (layout === "performance") {
-          topRowEl.append(spacerPileEl, ...foundationPileEls);
-          bottomRowEl.append(stockPileEl, wastePileEl);
-        } else if (layout === "right") {
+        if (layout === "right") {
           topRowEl.append(...foundationPileEls, spacerPileEl, wastePileEl, stockPileEl);
         } else {
           topRowEl.append(stockPileEl, wastePileEl, spacerPileEl, ...foundationPileEls);
@@ -1476,30 +1946,32 @@
       }
 
       function syncLayoutButtons() {
-        const performanceAvailable = performanceLayoutAvailable();
         layoutModeButtons.forEach((button) => {
           const mode = button.dataset.layoutMode;
           const active = mode === selectedLayout;
-          const disabled = mode === "performance" && !performanceAvailable;
           button.classList.toggle("active", active);
-          button.disabled = disabled;
           button.setAttribute("aria-pressed", active ? "true" : "false");
         });
-        if (performanceAvailable) {
-          layoutNote.textContent = "";
-        } else if (selectedLayout === "performance") {
-          layoutNote.textContent = "Performance selected; showing Default until portrait mobile.";
-        } else {
-          layoutNote.textContent = "Performance is available on portrait mobile.";
-        }
+      }
+
+      function syncPerformanceControls() {
+        const enabled = performanceControlsActive() ? "on" : "off";
+        const nextAction = performanceControlsEnabled ? "Hide" : "Show";
+        document.documentElement.dataset.performanceControls = enabled;
+        board.dataset.performanceControls = enabled;
+        performanceControlsToggle.textContent = performanceControlsEnabled ? "On" : "Off";
+        performanceControlsToggle.classList.toggle("active", performanceControlsEnabled);
+        performanceControlsToggle.title = `${nextAction} performance controls`;
+        performanceControlsToggle.setAttribute("aria-label", performanceControlsToggle.title);
+        performanceControlsToggle.setAttribute("aria-pressed", performanceControlsEnabled ? "true" : "false");
       }
 
       function syncLayout() {
-        const layout = effectiveLayout();
-        document.documentElement.dataset.layout = layout;
-        board.dataset.layout = layout;
-        arrangeLayout(layout);
+        document.documentElement.dataset.layout = selectedLayout;
+        board.dataset.layout = selectedLayout;
+        arrangeLayout(selectedLayout);
         syncLayoutButtons();
+        syncPerformanceControls();
       }
 
       function setLayout(layout) {
@@ -1509,13 +1981,20 @@
         render();
       }
 
+      function setPerformanceControls(enabled) {
+        performanceControlsEnabled = !!enabled;
+        savePerformanceControls();
+        syncLayout();
+        render();
+      }
+
       function syncTheme() {
-        const nextTheme = selectedTheme === "dark" ? "light" : "dark";
         document.documentElement.dataset.theme = selectedTheme;
-        themeToggle.textContent = selectedTheme === "dark" ? "Dark" : "Light";
-        themeToggle.title = `Switch to ${nextTheme} theme`;
-        themeToggle.setAttribute("aria-label", themeToggle.title);
-        themeToggle.setAttribute("aria-pressed", selectedTheme === "dark" ? "true" : "false");
+        themeModeButtons.forEach((button) => {
+          const active = button.dataset.themeMode === selectedTheme;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
       }
 
       function setTheme(theme) {
@@ -1527,7 +2006,9 @@
       function openSettings() {
         settingsModal.classList.add("open");
         settingsToggle.setAttribute("aria-expanded", "true");
-        themeToggle.focus();
+        const activeDealButton = dealModeButtons.find((button) => button.dataset.dealMode === selectedDealMode && !button.disabled);
+        const activeThemeButton = themeModeButtons.find((button) => button.dataset.themeMode === selectedTheme);
+        (activeDealButton || activeThemeButton || closeSettings).focus();
       }
 
       function closeSettingsModal() {
@@ -1577,7 +2058,7 @@
           startGameFromDeal({ ...deal, type: mode });
           return;
         }
-        if (bank[difficulty].length >= MAX_BANK) return;
+        if (bank[difficulty].length >= bankLimit) return;
         bank[difficulty].push({
           seed: deal.seed,
           difficulty: deal.difficulty,
@@ -1821,24 +2302,38 @@
         document.querySelectorAll(".card").forEach((card) => card.remove());
       }
 
+      function visibleStockPileElements() {
+        return performanceControlsActive() ? [stockPileEl, bottomStockPileEl] : [stockPileEl];
+      }
+
+      function visibleWastePileElements() {
+        return performanceControlsActive() ? [wastePileEl, bottomWastePileEl] : [wastePileEl];
+      }
+
+      function renderStockPile(pileEl) {
+        pileEl.querySelector(".slot").style.opacity = game.stock.length ? "0" : "1";
+        if (!game.stock.length) return;
+        const back = createCard({ id: 0, up: false }, "stock", 0, game.stock.length - 1, 0);
+        back.dataset.pile = "stock";
+        pileEl.appendChild(back);
+      }
+
+      function renderWastePile(pileEl) {
+        if (!game.waste.length) return;
+        const firstVisible = Math.max(0, game.waste.length - 2);
+        for (let index = firstVisible; index < game.waste.length; index++) {
+          const id = game.waste[index];
+          pileEl.appendChild(createCard({ id, up: true }, "waste", 0, index, 0));
+        }
+      }
+
       function render() {
         if (!game) return;
         clearTimeout(hintTimer);
         clearCards();
         syncLayout();
-        stockPileEl.querySelector(".slot").style.opacity = game.stock.length ? "0" : "1";
-        if (game.stock.length) {
-          const back = createCard({ id: 0, up: false }, "stock", 0, game.stock.length - 1, 0);
-          back.dataset.pile = "stock";
-          stockPileEl.appendChild(back);
-        }
-        if (game.waste.length) {
-          const firstVisible = Math.max(0, game.waste.length - 2);
-          for (let index = firstVisible; index < game.waste.length; index++) {
-            const id = game.waste[index];
-            wastePileEl.appendChild(createCard({ id, up: true }, "waste", 0, index, 0));
-          }
-        }
+        visibleStockPileElements().forEach(renderStockPile);
+        visibleWastePileElements().forEach(renderWastePile);
         game.foundations.forEach((pile, suit) => {
           if (!pile.length) return;
           const foundationEl = document.querySelector(`.foundation-pile[data-pile-index="${suit}"]`);
@@ -1876,6 +2371,7 @@
         newWinGame.disabled = autoSolving || waitingForDeal;
         restartBtn.disabled = autoSolving || waitingForDeal;
         hintBtn.disabled = autoSolving || waitingForDeal || game.won;
+        bottomAutoMoveBtn.disabled = autoSolving || waitingForDeal || game.won;
         renderBank();
       }
 
@@ -1889,8 +2385,9 @@
       }
 
       function findFaceUpCardElement(id) {
-        return [...document.querySelectorAll(`.card[data-card-id="${id}"]`)]
-          .find((el) => !el.classList.contains("face-down")) || null;
+        const cards = [...document.querySelectorAll(`.card[data-card-id="${id}"]`)]
+          .filter((el) => !el.classList.contains("face-down"));
+        return cards.find((el) => !bottomRowEl.contains(el)) || cards[0] || null;
       }
 
       function cardRect(id) {
@@ -1970,7 +2467,7 @@
         const topRowGap = parseFloat(topRowStyle.marginBottom) || 0;
         const cardHeight = cssNumber("--card-h");
         const bottomRowStyle = getComputedStyle(bottomRowEl);
-        const bottomRowSpace = effectiveLayout() === "performance"
+        const bottomRowSpace = performanceControlsActive()
           ? cardHeight + (parseFloat(bottomRowStyle.paddingTop) || 0)
           : 0;
         const fanSteps = Math.max(9, ...game.tableau.map((pile) => Math.max(0, pile.length - 1)));
@@ -2121,7 +2618,7 @@
         saveHistory();
         if (game.stock.length) {
           const id = game.stock[0];
-        queueCardAnimations([id], pileRect("stock"), { pile: "waste", index: 0 });
+          queueCardAnimations([id], pileRect("stock"), { pile: "waste", index: 0 });
           game.waste.push(game.stock.shift());
         } else {
           game.stock = game.waste.slice();
@@ -2614,6 +3111,7 @@
         generator.postMessage({
           type: "sync",
           counts: bankCounts(),
+          maxBank: bankLimit,
           seen: allBankSeeds().concat(game && Number.isFinite(game.deal.seed) ? [game.deal.seed] : [])
         });
       }
@@ -2635,7 +3133,7 @@
 
       function workerCode() {
         return `
-          const MAX_BANK = ${MAX_BANK};
+          let maxBank = ${bankLimit};
           let counts = { easy: 0, medium: 0, hard: 0 };
           let seen = new Set();
           let paused = false;
@@ -2647,6 +3145,7 @@
           onmessage = (event) => {
             if (event.data.type === "sync") {
               counts = event.data.counts || counts;
+              maxBank = Number.isFinite(event.data.maxBank) ? event.data.maxBank : maxBank;
               seen = new Set(event.data.seen || []);
             }
             if (event.data.type === "pause") paused = !!event.data.paused;
@@ -2889,7 +3388,7 @@
             return "Easy";
           }
           function full() {
-            return counts.easy >= MAX_BANK && counts.medium >= MAX_BANK && counts.hard >= MAX_BANK;
+            return counts.easy >= maxBank && counts.medium >= maxBank && counts.hard >= maxBank;
           }
           function matchesMode(difficulty, mode) {
             if (!mode) return false;
@@ -2923,7 +3422,7 @@
                 postMessage({ type: "deal", requested: true, deal: { seed, difficulty, metrics: result } });
                 break;
               }
-              if (counts[key] >= MAX_BANK) continue;
+              if (counts[key] >= maxBank) continue;
               counts[key] += 1;
               backgroundMissStreak = 0;
               postMessage({ type: "deal", deal: { seed, difficulty, metrics: result } });
@@ -2987,9 +3486,17 @@
       restartBtn.addEventListener("click", restartGame);
       undoBtn.addEventListener("click", undo);
       hintBtn.addEventListener("click", showHint);
+      bottomAutoMoveBtn.addEventListener("click", () => {
+        startTimer();
+        autoMove();
+      });
+      bankLimitInput.addEventListener("change", () => setBankLimit(bankLimitInput.value));
       settingsToggle.addEventListener("click", openSettings);
-      themeToggle.addEventListener("click", () => {
-        setTheme(selectedTheme === "dark" ? "light" : "dark");
+      themeModeButtons.forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeMode));
+      });
+      performanceControlsToggle.addEventListener("click", () => {
+        setPerformanceControls(!performanceControlsEnabled);
       });
       closeSettings.addEventListener("click", closeSettingsModal);
       settingsModal.addEventListener("click", (event) => {
@@ -3007,6 +3514,7 @@
         if (game && !game.won) timeEl.textContent = formatTime(elapsedSeconds());
       }, 1000);
 
+      syncBankLimitInput();
       syncTheme();
       syncLayout();
       renderBank();
